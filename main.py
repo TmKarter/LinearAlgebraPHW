@@ -1,6 +1,6 @@
 import numpy as np
 import sympy as sp
-
+from fractions import Fraction
 
 def latexHeader(file):
     file.write("\\documentclass{article}\n"
@@ -340,7 +340,131 @@ def writeSecondTask(equations, infinite, inconsistent, tasksFile, answersFile):
     tasksFile.write("\\end{center}\n")
     tasksFile.write("\n \\medskip \n")
 
+    
+def generateFourthTask(i):
+    ran_val_4 = i % 8
+    swap_2_3_row = 0
+    swap_2_3_col = 0
+    ans_ab = Fraction(0, 1)
+    ans_a = Fraction(0, 1)
+    ans_b = Fraction(0, 1)
+    line1 = list()
+    line2 = list()
+    line3 = list()
+    str_1 = ""
+    str_2 = ""
+    str_3 = ""
+    b_part = list()
+    ex_cnt = 1
+    if (ran_val_4 % 4 == 0):
+        swap_2_3_row = 0
+        swap_2_3_col = 0
+    elif (ran_val_4 % 4 == 1):
+        swap_2_3_row = 0
+        swap_2_3_col = 1
+    elif (ran_val_4 % 4 == 2):
+        swap_2_3_row = 1
+        swap_2_3_col = 0
+    elif (ran_val_4 % 4 == 3):
+        swap_2_3_row = 1
+        swap_2_3_col = 1
+    
+    if (ran_val_4 < 4): # 1 вариант
+        s1 = -((((i ** 4 + 3) % (7 + 11 * i)) % 7) + 1) * (-1) ** ((i + 5) ** 4 % 2)
+        s2 = -((((i ** 4 + 5) % (7 + 11 * i)) % 5) + 1) * (-1) ** ((i + 5) ** 2 % 4)
+        t1 = 1 * (-1) ** ((i + 5) ** 3 % 3)
+        t2 = -((((i ** 3 + 2) % (7 + 12 * i)) % 6) + 1) * (-1) ** ((i + 5) ** 6 % 7)
+        t3 =  -((((i ** 3 + 1) % (7 + 13 * i)) % 5) + 1) * (-1) ** ((i + 5) ** 5 % 5 + 1)
+        u1 =  -((((i ** 5 + 2) % (7 + 10 * i)) % 8) + 1) * (-1) ** ((i + 4) ** 3 % 5)
+        u2 = -((((i ** 6 + 3) % (11 + 12 * i)) % 9) + 1) * (-1) ** ((i + 7) ** 3 % 3)
+        z = -((((i ** 2 + 5) % (13 + 12 * i)) % 7) + 1) * (-1) ** ((i + 4) ** 3 % 6)
+        while (s1 * t2 - t1 * s2 == 0):
+            t2 = -((((i ** 4 + 3 * ex_cnt) % (17 + 12 * i)) % 9) + 1) * (-1) ** ((i + 3) ** 2 % 7)
+            ex_cnt += 1
+        while (z * t1 - t3 * s1 == 0):
+            t3 = -((((i ** 3 + 7 * ex_cnt) % (15 + 12 * i)) % 7) + 1) * (-1) ** ((i + 2) ** 2 % 7)
+            ex_cnt += 1
+        line1 = ['a', s1, s2, z]
+        line2 = [0, t1, t2, t3]
+        line3 = [u1, 0, 'b', u2]
+        if (swap_2_3_row):
+            line2, line3 = line3, line2
+        if (swap_2_3_col):
+            line1[1], line1[2] = line1[2], line1[1]
+            line2[1], line2[2] = line2[2], line2[1]
+            line3[1], line3[2] = line3[2], line3[1]
+        ans_ab = Fraction(u1 * t1 * s2 - s1 * t2 * u1, t1)
+        ans_a = Fraction(z * u1 * t1 - t3 * s1 * u1 , u2 * t1)
+        ans_b = Fraction(ans_ab, ans_a)
+    else:
+        s1 = -((((i ** 4 + 3) % (7 + 11 * i)) % 7) + 1) * (-1) ** ((i + 5) ** 4 % 2)
+        s2 = -((((i ** 4 + 5) % (7 + 11 * i)) % 5) + 1) * (-1) ** ((i + 5) ** 2 % 4)
+        t1 = -((((i ** 3 + 2) % (7 + 12 * i)) % 6) + 1) * (-1) ** ((i + 5) ** 6 % 7)
+        t2 = 1 * (-1) ** ((i + 5) ** 3 % 3)
+        t3 =  -((((i ** 3 + 1) % (7 + 13 * i)) % 5) + 1) * (-1) ** ((i + 5) ** 5 % 5 + 1)
+        u1 =  -((((i ** 5 + 2) % (7 + 10 * i)) % 8) + 1) * (-1) ** ((i + 4) ** 3 % 5)
+        u2 = -((((i ** 6 + 3) % (11 + 12 * i)) % 9) + 1) * (-1) ** ((i + 7) ** 3 % 3)
+        z = -((((i ** 2 + 5) % (13 + 12 * i)) % 7) + 1) * (-1) ** ((i + 4) ** 3 % 6)
+        while (u2 * t1 - t2 * u1 == 0):
+            t1 = -((((i ** 4 + 3 * ex_cnt) % (17 + 12 * i)) % 9) + 1) * (-1) ** ((i + 3) ** 2 % 7)
+            ex_cnt += 1
+        while (z * t2 - t3 * u2 == 0):
+            t3 = -((((i ** 3 + 7 * ex_cnt) % (15 + 12 * i)) % 7) + 1) * (-1) ** ((i + 2) ** 2 % 7)
+            ex_cnt += 1
+        line1 = ['a', 0, s1, s2]
+        line2 = [t1, t2, 0, t3]
+        line3 = [u1, u2, 'b', z]
+        if (swap_2_3_row):
+            line2, line3 = line3, line2
+        if (swap_2_3_col):
+            line1[1], line1[2] = line1[2], line1[1]
+            line2[1], line2[2] = line2[2], line2[1]
+            line3[1], line3[2] = line3[2], line3[1]
+        ans_ab = Fraction(t2 * u1 * s1 - t1 * u2 * s1, t2)
+        ans_b = Fraction(t2 * z * s1 - t3 * s1 * u2 , s2 * t2)
+        ans_a = Fraction(ans_ab, ans_b)
+    # готовим строки для вывода
+    container = ['x', 'y', 'z']
+    for j in range(3):
+        if (type(line1[j]) != type(0)):
+            str_1 = str_1 + ('+' if len(str_1) != 0 else "") + str(line1[j]) + container[j]
+        else:
+            if (line1[j] != 0):
+                str_1 = str_1 + ('+' if line1[j] > 0 and len(str_1) != 0 else "") + ('-' if line1[j] == -1 else str(line1[j]) if line1[j] != 1 else "") + container[j]
+    for j in range(3):
+        if (type(line2[j]) != type(0)):
+            str_2 = str_2 + ('+' if len(str_2) != 0 else "") + (str(line2[j])) + container[j]
+        else:
+            if (line2[j] != 0):
+                str_2 = str_2 + ('+' if line2[j] > 0 and len(str_2) != 0 else "") + ('-' if line2[j] == -1 else str(line2[j]) if line2[j] != 1 else "") + container[j]
+    for j in range(3):
+        if (type(line3[j]) != type(0)):
+            str_3 = str_3 + ('+' if len(str_3) != 0 else "") + str(line3[j]) + container[j]
+        else:
+            if (line3[j] != 0):
+                str_3 = str_3 + ('+' if line3[j] > 0 and len(str_3) != 0 else "") + ('-' if line3[j] == -1 else str(line3[j]) if line3[j] != 1 else "") + container[j]
+    b_part = [line1[3], line2[3], line3[3]]
+    return str_1, str_2, str_3, ans_ab, ans_a, ans_b, b_part
 
+def writeFourthTask(str_1, str_2, str_3, b_part, ans_ab, ans_a, ans_b):
+    # код для внесения в task    
+    tasks_file.write("{\\noindent \\bf 4} "
+                     # условие задания надо проверить, в нем не уверен
+                         "Исследовать, будет ли система уравнений совместна"
+                         "И если да, то какое кол-во решений она имеет, в зависимости от параметров\n")
+
+    tasks_file.write("\\[\\begin{cases}")
+    tasks_file.write(str_1 + " &= " + str(b_part[0]) + "\\\\")
+    tasks_file.write(str_2 + " &= " + str(b_part[1]) + "\\\\")
+    tasks_file.write(str_3 + " &= " + str(b_part[2]))
+    tasks_file.write("\\end{cases}"
+                         "\\]\n"
+                         "\\medskip\n")
+        
+    # код для внесения в ответы
+    answers_file.write("\\[\\] при ab \ne " + ans_ab + "СЛУ имеет единственное решение.\n"
+                   "при ab = " + ans_ab + "и a = " + ans_a + "и b =" + ans_b + "СЛУ имеет б/м решений.\n"
+                   "при ab = " + ans_ab + "и а \ne" + ans_a + "и b \ne" + ans_b + "СЛУ несовместна.\n")
 groups_size = 60
 groups_number = 9
 total_tasks = groups_number * groups_size
@@ -369,6 +493,11 @@ for index in range(1, groups_number + 1):
         # Второе задание
         equations, infinite, inconsistent = generateSecondTask(-50, 50, -5, 5)
         writeSecondTask(equations, infinite, inconsistent, tasksFile, answersFile)
+        
+        # Четвертое задание
+        # Генерацию чисел в матрице завязываю на варианте работы - variant
+        str_1, str_2, str_3, ans_ab, ans_a, ans_b, b_part = generateFourthTask(variant)
+        writeFourthTask(str_1, str_2, str_3, b_part, ans_ab, ans_a, ans_b)
 
         tasksFile.write("\\newpage\n")
         answersFile.write("\\newpage\n")
