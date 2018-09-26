@@ -2,514 +2,381 @@ import numpy as np
 import sympy as sp
 
 
+def latexHeader(file):
+    file.write("\\documentclass{article}\n"
+               "\\usepackage{latexsym,amsxtra,amscd,ifthen}\n"
+               "\\usepackage{amsfonts}\n"
+               "\\usepackage{verbatim}\n"
+               "\\usepackage{amsmath}\n"
+               "\\usepackage{amsthm}\n"
+               "\\usepackage{amssymb}\n"
+               "\\usepackage[russian]{babel}\n"
+               "\\usepackage[utf8]{inputenc}\n"
+               "\\usepackage[T2A]{fontenc}\n"
+               "\\numberwithin{equation}{section}\n"
+               "\\pagestyle{plain}\n"
+               "\\textwidth=19.0cm\n"
+               "\\oddsidemargin=-1.3cm\n"
+               "\\textheight=26cm\n"
+               "\\topmargin=-3.0cm\n"
+               "\\tolerance=500\n"
+               "\\unitlength=1mm\n"
+               "\\def\\R{{\\mathbb{R}}}\n"
+               "\\begin{document}\n")
+
+
+def tasksHeader(file, group, variant):
+    group = str(group)
+    variant = str(variant)
+    file.write("\\begin{center}\n"
+               "\\footnotesize\n"
+               "\\noindent\\makebox[\\textwidth]{Линейная алгебра и геометрия \\hfill ФКН НИУ ВШЭ, 2018/2019 учебный год, 1-й курс ОП ПМИ, основной поток}\n"
+               "\\end{center}\n"
+               "\\begin{center}\n"
+               "\\textbf{Индивидуальное домашнее задание 1}\n"
+               "\\end{center}\n"
+               "\\begin{center}\n"
+               "{Группа БПМИ" + group + ". Вариант " + variant + "}\n\\end{center}\n")
+
+
+def answersHeader(file, group, variant):
+    group = str(group)
+    variant = str(variant)
+    file.write("\\begin{center}"
+               "\\bf Ответы к индивидуальному домашнему заданию 1"
+               "\\end{center}"
+               "\\begin{center}"
+               "{Группа БПМИ" + group + ". Вариант " + variant + "}\n\\end{center}\n")
+
+
 def latexCdot(file):
-    file.write("\\cdot")
+    file.write(" \\cdot ")
 
 
 def latexMatrix(file, A):
     file.write("\\begin{pmatrix}")
     for i in range(A.shape[0]):
         for j in range(A.shape[1]):
-            if not isinstance(A[i, j], str):
-                file.write(str(int(A[i, j])))
-            else:
-                file.write(A[i, j])
+            file.write(str(A[i, j]))
             if j != A.shape[1] - 1:
                 file.write(" & ")
         if i != A.shape[0] - 1:
             file.write("\\\\")
+        file.write("\n")
     file.write("\\end{pmatrix}")
 
 
-def generateSOLE():
-    lowest_bound = -50
-    highest_bound = 50
-    first_basis = np.random.randint(lowest_bound, highest_bound, (4, 1))
-    second_basis = np.random.randint(lowest_bound, highest_bound, (4, 1))
+def latexMatrixSquared(file, A):
+    latexMatrix(file, A)
+    file.write("^2")
+
+
+def latexMatrixProduct(file, M):
+    for i in range(len(M)):
+        latexMatrix(file, M[i])
+        if i != len(M) - 1:
+            latexCdot(file)
+
+
+def latexMatrixSingleTranspose(file, A):
+    latexMatrix(file, A)
+    file.write("^T")
+
+
+def latexMatrixMultipleTranspose(file, M):
+    file.write("\\Biggl[")
+    latexMatrixProduct(file, M)
+    tasksFile.write("\\Biggl]^{T}")
+
+
+def generateRandomMatrixWithNoZeros(lowest_bound, highest_bound, rows, columns):
+    matrix = np.random.randint(lowest_bound, highest_bound, (rows, columns), int)
+    for row in range(len(matrix)):
+        for column in range(len(matrix[row])):
+            while matrix[row][column] == 0:
+                matrix[row][column] = np.random.randint(lowest_bound, highest_bound)
+    return np.matrix(matrix)
+
+
+def generateFirstTask(lowest_bound, highest_bound, u_lowest_bound, u_highest_bound, v_lowest_bound, v_highest_bound):
+    A = generateRandomMatrixWithNoZeros(lowest_bound, highest_bound, 2, 3)
+    B = generateRandomMatrixWithNoZeros(lowest_bound, highest_bound, 2, 3)
+    C = generateRandomMatrixWithNoZeros(lowest_bound, highest_bound, 2, 2)
+    D = generateRandomMatrixWithNoZeros(lowest_bound, highest_bound, 2, 2)
+    while np.array_equal(C * D, D * C):
+        C = generateRandomMatrixWithNoZeros(lowest_bound, highest_bound, 2, 2)
+    u = 0
+    while u == -1 or u == 0 or u == 1:
+        u = np.random.randint(u_lowest_bound, u_highest_bound)
+    v = 0
+    while v == -1 or v == 0 or v == 1:
+        v = np.random.randint(v_lowest_bound, v_highest_bound)
+    return A, B, C, D, u, v
+
+
+def writeFirstTask(A, B, C, D, u, v, tasksFile, answers):
+    tasksFile.write("{\\noindent \\bf 1.} "
+                    "Даны матрицы\n")
+
+    tasksFile.write("\\[\n")
+    tasksFile.write("A = ")
+    latexMatrix(tasksFile, A)
+    tasksFile.write(", B = ")
+    latexMatrix(tasksFile, B)
+    tasksFile.write(", C = ")
+    latexMatrix(tasksFile, C)
+    tasksFile.write(", D = ")
+    latexMatrix(tasksFile, D)
+    tasksFile.write(".\\]\n")
+    tasksFile.write("Вычислите матрицу\n")
+
+    tasksFile.write("\\[\n")
+
+    swipe_CD1 = np.random.randint(0, 2)
+    swipe_C1 = np.random.randint(0, 2)
+    swipe_AB12 = np.random.randint(0, 2)
+
+    tasksFile.write(str(u))
+    # Начало первого слагаемого
+    first_term = 1
+    if swipe_C1 and swipe_CD1:
+        tasksFile.write("D \\cdot ")
+        first_term *= D
+    elif swipe_C1:
+        tasksFile.write("C \\cdot ")
+        first_term *= C
+
+    if swipe_AB12:
+        tasksFile.write("A \\cdot A^T")
+        first_term *= A * A.transpose()
+    else:
+        tasksFile.write("B \\cdot B^T")
+        first_term *= B * B.transpose()
+
+    if not swipe_C1 and swipe_CD1:
+        tasksFile.write(" \\cdot D")
+        first_term *= D
+    elif not swipe_C1 and not swipe_CD1:
+        tasksFile.write(" \\cdot C")
+        first_term *= C
+    # Конец первого слагаемого
+
+    tasksFile.write("+")
+    # tasksFile.write("\\]")
+    # tasksFile.write("\\[")
+    # tasksFile.write("+")
+
+    # Начало второго слагаемого
+    second_term = 1
+    tasksFile.write("\\operatorname{tr}\\left(")
+    if swipe_AB12:
+        tasksFile.write("B^T \\cdot B")
+        second_term *= int((B.transpose() * B).trace())
+    else:
+        tasksFile.write("A^T \\cdot A")
+        second_term *= int((A.transpose() * A).trace())
+    tasksFile.write("\\right)")
+    latexCdot(tasksFile)
+
+    swipe_AB2 = np.random.randint(0, 2)
+    swipe_sign2 = np.random.randint(0, 2)
+    first, second = A, B
+    sign = "-"
+    if swipe_AB2:
+        first, second = B, A
+    if swipe_sign2:
+        sign = "+"
+        second_term *= first + second
+    else:
+        second_term *= first - second
+
+    tasksFile.write("\\left(")
+    tasksFile.write("A" if np.array_equal(first, A) else "B")
+    tasksFile.write(sign)
+    if sign == "+":
+        sign = "-"
+        second_term = second_term * (first.transpose() - second.transpose())
+    else:
+        sign = "+"
+        second_term = second_term * (first.transpose() + second.transpose())
+    tasksFile.write("A" if np.array_equal(second, A) else "B")
+    tasksFile.write("\\right)")
+    latexCdot(tasksFile)
+    tasksFile.write("\\left(")
+    tasksFile.write("A^T" if np.array_equal(first, A) else "B^T")
+    tasksFile.write(sign)
+    tasksFile.write("A^T" if np.array_equal(second, A) else "B^T")
+    tasksFile.write("\\right)")
+    # Конец второго слагаемого
+
+    # if v > 0:
+    #     tasksFile.write("+ ")
+    # tasksFile.write("\\]")
+    # tasksFile.write("\\[")
+
+    # Начало третьего слагаемого
+    third_term = v * C * C
+    if v > 0:
+        tasksFile.write("+ ")
+    tasksFile.write(str(v))
+    tasksFile.write("C^2")
+    # Конец третьего слагаемого
+
+    # Начало четвертого слагаемого
+    fourth_term = 1
+    swipe_sign4 = np.random.randint(0, 2)
+    v *= 2
+    if swipe_sign4:
+        fourth_term *= -v
+        if v > 0:
+            tasksFile.write("-" + str(v))
+        elif v < 0:
+            tasksFile.write("+" + str(-1 * v))
+    else:
+        fourth_term *= v
+        if v > 0:
+            tasksFile.write("+" + str(v))
+        elif v < 0:
+            tasksFile.write(str(v))
+    tasksFile.write("C \\cdot D")
+    fourth_term = C * D * fourth_term
+    # Конец четвертого слагаемого
+
+    # Начало пятого слагаемого
+    v = int(v // 2)
+    fifth_term = v * D * D
+    if v > 0:
+        tasksFile.write("+")
+    tasksFile.write(str(v))
+    tasksFile.write("D^2")
+    # Конец пятого слагаемого
+
+    tasksFile.write(".\\]\n")
+    tasksFile.write("\n \\medskip \n")
+
+    answer = first_term + second_term + third_term + fourth_term + fifth_term
+    answers.write("\\[\\] 1. Должна получиться следующая матрица: $$")
+    latexMatrix(answers, answer)
+    answers.write("$$\n")
+
+
+def generateSecondTask(numbers_lowest_bound, numbers_highest_bound, coefficient_lowest_bound, coefficient_highest_bound):
+    first_basis = np.random.randint(numbers_lowest_bound, numbers_highest_bound, (4, 1))
+    second_basis = np.random.randint(numbers_lowest_bound, numbers_highest_bound, (4, 1))
+
     while np.linalg.matrix_rank(np.matrix(np.column_stack((first_basis, second_basis)))) != 2:
-        second_basis = np.random.randint(lowest_bound, highest_bound, (4, 1))
-    column_b_infinite = (np.random.randint(int(lowest_bound / 10), int(highest_bound / 10)) * first_basis +
-                         np.random.randint(int(lowest_bound / 10), int(highest_bound / 10)) * second_basis)
-    third_vector = (np.random.randint(int(lowest_bound / 10), int(highest_bound / 10)) * first_basis +
-                    np.random.randint(int(lowest_bound / 10), int(highest_bound / 10)) * second_basis)
-    fourth_vector = (np.random.randint(int(lowest_bound / 10), int(highest_bound / 10)) * first_basis +
-                     np.random.randint(int(lowest_bound / 10), int(highest_bound / 10)) * second_basis)
-    column_b_inconsistent = np.random.randint(lowest_bound, highest_bound, (4, 1))
+        second_basis = np.random.randint(numbers_lowest_bound, numbers_highest_bound, (4, 1))
+
+    third_vector = (np.random.randint(coefficient_lowest_bound, coefficient_highest_bound) * first_basis +
+                    np.random.randint(coefficient_lowest_bound, coefficient_highest_bound) * second_basis)
+    fourth_vector = (np.random.randint(coefficient_lowest_bound, coefficient_highest_bound) * first_basis +
+                     np.random.randint(coefficient_lowest_bound, coefficient_highest_bound) * second_basis)
+
+    column_b_infinite = (np.random.randint(coefficient_lowest_bound, coefficient_highest_bound) * first_basis +
+                         np.random.randint(coefficient_lowest_bound, coefficient_highest_bound) * second_basis)
+
+    column_b_inconsistent = np.random.randint(numbers_lowest_bound, numbers_highest_bound, (4, 1))
     while np.linalg.matrix_rank(np.matrix(np.column_stack((first_basis, second_basis, column_b_inconsistent)))) != 3:
-        column_b_inconsistent = np.random.randint(lowest_bound, highest_bound, (4, 1))
+        column_b_inconsistent = np.random.randint(numbers_lowest_bound, numbers_highest_bound, (4, 1))
+
     return np.matrix(np.column_stack((first_basis, second_basis, third_vector, fourth_vector))), column_b_infinite, column_b_inconsistent
 
 
-def powerTask(i):
-    M11 = np.matrix([[1, "a", 0], [0, "a", 0], [0, "a", 1]])
-    M22 = np.matrix([["a", 1, 1], [0, "a ^ 2", 0], [0, 0, "a"]])
-    M33 = np.matrix([["a", 0, 1], [0, "a ^ 2", 1], [0, 0, "a"]])
-    M44 = np.matrix([["a", 0, 0], [1, "a", 1], [0, 0, "a"]])
-    M55 = np.matrix([["a", 1, 0], [0, "a", 0], [0, 1, "a"]])
-    M66 = np.matrix([[1, 0, 0], ["a", "a", "a"], [0, 0, 1]])
-
-    a1 = (i + 1) % 4 + 2
-    M1 = np.matrix([[1, a1, 0], [0, a1, 0], [0, a1, 1]])
-    M2 = np.matrix([[a1, 1, 1], [0, a1 ** 2, 0], [0, 0, a1]])
-    M3 = np.matrix([[a1, 0, 1], [0, a1 ** 2, 1], [0, 0, a1]])
-    M4 = np.matrix([[a1, 0, 0], [1, a1, 1], [0, 0, a1]])
-    M5 = np.matrix([[a1, 1, 0], [0, a1, 0], [0, 1, a1]])
-    M6 = np.matrix([[1, 0, 0], [a1, a1, a1], [0, 0, 1]])
-    SET = [M1, M2, M3, M4, M5, M6]
-
-    SET1 = [M11, M22, M33, M44, M55, M66]
-
-    R1 = np.matrix([[1, "\\frac{a(a^n - 1)}{a - 1}", 0],
-                    [0, "a ^ n", 0],
-                    [0, "\\frac{a(a^n - 1)}{a - 1}", 1]])
-
-    R2 = np.matrix([["a ^ n", "t", "na ^ {(n - 1)}"],
-                    [0, "a ^ {2n}", 0],
-                    [0, 0, "a ^ n"]])
-
-    R3 = np.matrix([["a ^ n", 0, "na ^ {(n - 1)}"],
-                    [0, "a ^ {2n}", "t"],
-                    [0, 0, "a ^ n"]])
-
-    R4 = np.matrix([["a ^ n", 0, 0],
-                    ["na ^ {(n - 1)}", "a ^ n", "na ^ {(n - 1)}"],
-                    [0, 0, "a ^ n"]])
-
-    R5 = np.matrix([["a ^ n", "na ^ {(n - 1)}", 0],
-                    [0, "a ^ n", 0],
-                    [0, "na ^ {(n - 1)}", "a ^ n"]])
-
-    R6 = np.matrix([[1, 0, 0],
-                    ["\\frac{a(a^n - 1)}{a - 1}", "a ^ n", "\\frac{a(a^n - 1)}{a - 1}"],
-                    [0, 0, 1]])
-
-    R = [R1, R2, R3, R4, R5, R6]
-    RES = [SET[i % 6], SET1[i % 6], R[i % 6]]
-    return RES
+def writeSOLE(equations, b, file, sign):
+    file.write("$\\begin{cases}")
+    for row in range(equations.shape[0]):
+        for column in range(equations.shape[1]):
+            if equations[row, column] == 0:
+                continue
+            if column != 0:
+                file.write("+" if equations[row, column] > 0 else "")
+            if equations[row, column] != 1 and equations[row, column] != 1:
+                file.write(str(equations[row, column]))
+            elif equations[row, column] == -1:
+                file.write("-")
+            file.write("x_{" + str(column + 1) + "}")
+        file.write(" &= " + str(int(b[row][0])))
+        if row < len(equations) - 1:
+            file.write(", \\\\")
+        else:
+            file.write(sign)
+    file.write("\\end{cases}$ \n \\medskip\n")
 
 
-generateSOLE()
+def writeSecondTask(equations, infinite, inconsistent, tasksFile, answersFile):
+    inconsistentFirst = np.random.randint(0, 2)
+    tasksFile.write("{\\noindent \\bf 2.} "
+                    "Решите каждую из приведённых ниже систем линейных уравнений методом Гаусса. "
+                    "Если система совместна, то выпишите её общее решение и укажите одно частное решение.\\\\")
+    equations_infinite = np.c_[equations, infinite]
+    equations_inconsistent = np.c_[equations, inconsistent]
+    row_reduced_infinite = np.matrix(sp.Matrix(equations_infinite).rref()[0])
+    row_reduced_inconsistent = np.matrix(sp.Matrix(equations_inconsistent).rref()[0])
+    tasksFile.write("\\begin{center}\n")
+    tasksFile.write("(a)\\quad")
+    if inconsistentFirst:  # Сначала несовместная система
+        writeSOLE(equations, inconsistent, tasksFile, ";")
+        answersFile.write("\\[\\] 2. (а) Должна получиться несовместная система со следующей матрицей: $$")
+        latexMatrix(answersFile, row_reduced_inconsistent)
+        answersFile.write("$$\n")
+    else:  # Бесконечное число решений сначале
+        writeSOLE(equations, infinite, tasksFile, ";")
+        answersFile.write("\\[\\] 2. (а) Должна получиться совместная система с бесконечным количеством решений и следующей матрицей: $$")
+        latexMatrix(answersFile, row_reduced_infinite)
+        answersFile.write("$$\n")
+
+    tasksFile.write("\\qquad (б)\\quad")
+
+    if inconsistentFirst:  # Бесконечное число решений в конце
+        writeSOLE(equations, infinite, tasksFile, ".")
+        answersFile.write("\\[\\] (б) Должна получиться совместная система с бесконечным количеством решений и следующей матрицей: $$")
+        latexMatrix(answersFile, row_reduced_infinite)
+        answersFile.write("$$\n")
+    else:  # Несовместная система в конце
+        writeSOLE(equations, inconsistent, tasksFile, ".")
+        answersFile.write("\\[\\] (б) Должна получиться несовместная система со следующей матрицей: $$")
+        latexMatrix(answersFile, row_reduced_inconsistent)
+        answersFile.write("$$\n")
+    tasksFile.write("\\end{center}\n")
+    tasksFile.write("\n \\medskip \n")
+
 
 groups_size = 60
 groups_number = 9
 total_tasks = groups_number * groups_size
 year = 2018
 
-tasks_filename = ["" for i in range(groups_number + 2)]
-answers_filename = ["" for i in range(groups_number + 2)]
 # Цикл, обходящий все группы. Запись в файл "tasks" и файл "answers" преамбулы ТеХ-файла
 for index in range(1, groups_number + 1):
     # Создание файлов для записи условий и для записи ответов, подстановка номера группы в имена файлов
-    tasks_filename[index] = "18" + str(index) + "_tasks.tex"
-    answers_filename[index] = "18" + str(index) + "_answers.tex"
-    tasks_file = open(tasks_filename[index], 'w')
-    answers_file = open(answers_filename[index], 'w')
+    tasksFile = open("18" + str(index) + "_tasks.tex", 'w')
+    answersFile = open("18" + str(index) + "_answers.tex", 'w')
 
-    tasks_file.write("\\documentclass{article}\n"
-                     "\\usepackage{latexsym,amsxtra,amscd,ifthen}\n"
-                     "\\usepackage{amsfonts}\n"
-                     "\\usepackage{verbatim}\n"
-                     "\\usepackage{amsmath}\n"
-                     "\\usepackage{amsthm}\n"
-                     "\\usepackage{amssymb}\n"
-                     "\\usepackage[russian]{babel}\n"
-                     "\\usepackage[utf8]{inputenc}\n"
-                     "\\usepackage[T2A]{fontenc}\n"
-                     "\\numberwithin{equation}{section}\n"
-                     "\\pagestyle{plain}\n"
-                     "\\textwidth=19.0cm\n"
-                     "\\oddsidemargin=-1.3cm\n"
-                     "\\textheight=26cm\n"
-                     "\\topmargin=-3.0cm\n"
-                     "\\tolerance=500\n"
-                     "\\unitlength=1mm\n"
-                     "\\def\\R{{\\mathbb{R}}}\n"
-                     "\\begin{document}\n")
-
-    answers_file.write("\\documentclass{article}\n"
-                       "\\usepackage{latexsym,amsxtra,amscd,ifthen}\n"
-                       "\\usepackage{amsfonts}\n"
-                       "\\usepackage{verbatim}\n"
-                       "\\usepackage{amsmath}\n"
-                       "\\usepackage{amsthm}\n"
-                       "\\usepackage{amssymb}\n"
-                       "\\usepackage[russian]{babel}\n"
-                       "\\usepackage[utf8]{inputenc}\n"
-                       "\\numberwithin{equation}{section}\n"
-                       "\\pagestyle{plain}\n"
-                       "\\tolerance=500\n"
-                       "\\unitlength=1mm\n"
-                       "\\textwidth=16cm\n"
-                       "\\textheight=770pt\n"
-                       "\\oddsidemargin=-8mm\n"
-                       "\\topmargin -32mm\n"
-                       "\\def\\R{{\\mathbb{R}}}\n"
-                       "\\begin{document}\n")
+    latexHeader(tasksFile)
+    latexHeader(answersFile)
 
     for i in range((index - 1) * groups_size + 1, index * groups_size + 1):
-        # Первое задание
-        EQ, b_infinite, b_inconsistent = generateSOLE()
-        EQ_with_infinite = np.c_[EQ, b_infinite]
-        EQ_with_inconsistent = np.c_[EQ, b_inconsistent]
-        row_reduced_infinite = np.matrix(sp.Matrix(EQ_with_infinite).rref()[0])
-        row_reduced_inconsistent = np.matrix(sp.Matrix(EQ_with_inconsistent).rref()[0])
-
-        C = [str(int(EQ[0, 0])) + "x_1" +
-             ("+" if EQ[0, 1] > 0 else "") + str(int(EQ[0, 1])) + "x_2" +
-             ("+" if EQ[0, 2] > 0 else "") + str(int(EQ[0, 2])) + "x_3" +
-             ("+" if EQ[0, 3] > 0 else "") + str(int(EQ[0, 3])) + "x_4",
-
-             str(int(EQ[1, 0])) + "x_1" +
-             ("+" if EQ[1, 1] > 0 else "") + str(int(EQ[1, 1])) + "x_2" +
-             ("+" if EQ[1, 2] > 0 else "") + str(int(EQ[1, 2])) + "x_3" +
-             ("+" if EQ[1, 3] > 0 else "") + str(int(EQ[1, 3])) + "x_4",
-
-             str(int(EQ[2, 0])) + "x_1" +
-             ("+" if EQ[2, 1] > 0 else "") + str(int(EQ[2, 1])) + "x_2" +
-             ("+" if EQ[2, 2] > 0 else "") + str(int(EQ[2, 2])) + "x_3" +
-             ("+" if EQ[2, 3] > 0 else "") + str(int(EQ[2, 3])) + "x_4",
-
-             str(int(EQ[3, 0])) + "x_1" +
-             ("+" if EQ[3, 1] > 0 else "") + str(int(EQ[3, 1])) + "x_2" +
-             ("+" if EQ[3, 2] > 0 else "") + str(int(EQ[3, 2])) + "x_3" +
-             ("+" if EQ[3, 3] > 0 else "") + str(int(EQ[3, 3])) + "x_4"]
-
-        # Второе задание
-        lowest_bound = 1
-        highest_bound = 9
-
-        B2 = np.matrix(np.random.randint(lowest_bound, highest_bound, (2, 2)))
-        C2 = np.matrix(np.random.randint(lowest_bound, highest_bound, (2, 2)))
-        D2 = np.matrix(np.random.randint(lowest_bound, highest_bound, (2, 2)))
-        Ans_T = []
-
-        A2 = C2 + D2
-
-        if ((i + 4) ** 3) % 3 == 0:
-            Ans_T = (A2.transpose() * C2 * B2 -
-                     (B2 * A2).transpose() * B2 +
-                     A2.transpose() * D2 * B2 -
-                     C2.transpose() * A2 * A2.transpose() +
-                     A2.transpose() * (A2 * B2).transpose() -
-                     D2.transpose() * A2 * A2.transpose())
-
-        elif ((i + 4) ** 3) % 3 == 1:
-            Ans_T = (C2.transpose() * B2 * A2.transpose() -
-                     A2.transpose() * B2 * B2 +
-                     D2.transpose() * B2 * A2.transpose() -
-                     A2.transpose() * A2 * A2.transpose() +
-                     A2.transpose() * C2 * B2 +
-                     A2.transpose() * C2 * D2)
-
-        else:
-            Ans_T = (D2 * B2 * B2.transpose() +
-                     C2 * (C2 * B2).transpose() -
-                     A2 * B2.transpose() * B2.transpose() +
-                     D2 * (C2 * B2).transpose() +
-                     A2 * (D2 * B2).transpose() +
-                     C2 * B2 * B2)
-
-        # Третье задание
-        A_power_n = powerTask(i)
-
-        # Запись в файл "tasks" шапки документа, номера группы и номера варианта
         group = 180 + int((i - 1) / groups_size) + 1
         variant = i - groups_size * int((i - 1) / groups_size)
-        tasks_file.write("\\begin{center}\n"
-                         "\\footnotesize\n"
-                         "\\noindent\\makebox[\\textwidth]{Линейная алгебра и геометрия \\hfill ФКН НИУ ВШЭ, 2018/2019 учебный год, 1-й курс ОП ПМИ, основной поток}\n"
-                         "\\end{center}\n"
-                         "\\begin{center}\n"
-                         "\\textbf{Индивидуальное домашнее задание 1}\n"
-                         "\\end{center}\n"
-                         "\\begin{center}\n"
-                         "{Группа БПМИ" + str(group) + ". Вариант " + str(variant) + "}\n"
-                                                                                     "\\end{center}\n")
 
-        random_value = int(2 * ((2 ** (1 / 2) * i + 0.2) - int(2 ** (1 / 2) * i + 0.2)))
+        tasksHeader(tasksFile, group, variant)
+        answersHeader(answersFile, group, variant)
 
-        # Запись в файл "tasks" условия задачи 1
-        tasks_file.write("{\\noindent \\bf 1.1} "
-                         "Решите приведённую ниже систему линейных уравнений методом Гаусса. "
-                         "Если система совместна, то выпишите её общее решение и укажите одно частное решение.")
-        b_column = ()
-        if random_value == 1:  # Запись несовместной системы сначала
-            b_column = (b_inconsistent, b_infinite)
-        else:  # Запись системы с бесконечным количеством решений сначала
-            b_column = (b_infinite, b_inconsistent)
+        # Первое задание
+        A1, B1, C1, D1, u1, v1 = generateFirstTask(-5, 6, -5, 6, -5, 6)
+        writeFirstTask(A1, B1, C1, D1, u1, v1, tasksFile, answersFile)
 
-        tasks_file.write("\\[\\begin{cases}")
-        tasks_file.write(C[0] + " &= " + str(int(b_column[0][0])) + "\\\\")
-        tasks_file.write(C[1] + " &= " + str(int(b_column[0][1])) + "\\\\")
-        tasks_file.write(C[2] + " &= " + str(int(b_column[0][2])) + "\\\\")
-        tasks_file.write(C[3] + " &= " + str(int(b_column[0][3])))
-        tasks_file.write("\\end{cases}"
-                         "\\]\n"
-                         "\\medskip\n")
+        # Второе задание
+        equations, infinite, inconsistent = generateSecondTask(-50, 50, -5, 5)
+        writeSecondTask(equations, infinite, inconsistent, tasksFile, answersFile)
 
-        tasks_file.write("{\\noindent \\bf 1.2} "
-                         "Тот же вопрос для этой системы.")
+        tasksFile.write("\\newpage\n")
+        answersFile.write("\\newpage\n")
 
-        tasks_file.write("\\[\\begin{cases}")
-        tasks_file.write(C[0] + " &= " + str(int(b_column[1][0])) + "\\\\")
-        tasks_file.write(C[1] + " &= " + str(int(b_column[1][1])) + "\\\\")
-        tasks_file.write(C[2] + " &= " + str(int(b_column[1][2])) + "\\\\")
-        tasks_file.write(C[3] + " &= " + str(int(b_column[1][3])))
-        tasks_file.write("\\end{cases}"
-                         "\\]\n"
-                         "\\medskip\n")
-
-        # Запись в файл "tasks" условия задачи 2
-        tasks_file.write("{\\noindent \\bf2.} "
-                         "Вычислите: ")
-        if (i + 4) ** 3 % 3 == 0:
-            tasks_file.write("\\[")
-            latexMatrix(tasks_file, A2.transpose())
-            latexCdot(tasks_file)
-            latexMatrix(tasks_file, C2)
-            latexCdot(tasks_file)
-            latexMatrix(tasks_file, B2)
-
-            tasks_file.write("-")
-
-            tasks_file.write("\\Biggl[")
-            latexMatrix(tasks_file, B2)
-            latexCdot(tasks_file)
-            latexMatrix(tasks_file, A2)
-            tasks_file.write("\\Biggl]^{T}")
-            latexCdot(tasks_file)
-            latexMatrix(tasks_file, B2)
-
-            tasks_file.write("+")
-
-            latexMatrix(tasks_file, A2.transpose())
-            latexCdot(tasks_file)
-            latexMatrix(tasks_file, D2)
-            latexCdot(tasks_file)
-            latexMatrix(tasks_file, B2)
-
-            tasks_file.write("-")
-            tasks_file.write("\\]")
-            tasks_file.write("\\[")
-            tasks_file.write("-")
-
-            latexMatrix(tasks_file, C2.transpose())
-            latexCdot(tasks_file)
-            latexMatrix(tasks_file, A2)
-            latexCdot(tasks_file)
-            latexMatrix(tasks_file, A2.transpose())
-
-            tasks_file.write("+")
-
-            latexMatrix(tasks_file, A2.transpose())
-            latexCdot(tasks_file)
-            tasks_file.write("\\Biggl[")
-            latexMatrix(tasks_file, A2)
-            latexCdot(tasks_file)
-            latexMatrix(tasks_file, B2)
-            tasks_file.write("\\Biggl]^{T}")
-
-            tasks_file.write("-")
-
-            latexMatrix(tasks_file, D2.transpose())
-            latexCdot(tasks_file)
-            latexMatrix(tasks_file, A2)
-            latexCdot(tasks_file)
-            latexMatrix(tasks_file, A2.transpose())
-
-            tasks_file.write("\\]")
-
-        elif (i + 4) ** 3 % 3 == 1:
-            tasks_file.write("\\[")
-
-            latexMatrix(tasks_file, C2.transpose())
-            latexCdot(tasks_file)
-            latexMatrix(tasks_file, B2)
-            latexCdot(tasks_file)
-            latexMatrix(tasks_file, A2.transpose())
-
-            tasks_file.write("-")
-
-            latexMatrix(tasks_file, A2.transpose())
-            latexCdot(tasks_file)
-            latexMatrix(tasks_file, A2)
-            tasks_file.write("^{2}")
-
-            tasks_file.write("+")
-
-            latexMatrix(tasks_file, D2.transpose())
-            latexCdot(tasks_file)
-            latexMatrix(tasks_file, B2)
-            latexCdot(tasks_file)
-            latexMatrix(tasks_file, A2.transpose())
-
-            tasks_file.write("-")
-            tasks_file.write("\\]")
-            tasks_file.write("\\[")
-            tasks_file.write("-")
-
-            latexMatrix(tasks_file, A2.transpose())
-            latexCdot(tasks_file)
-            latexMatrix(tasks_file, A2)
-            latexCdot(tasks_file)
-            latexMatrix(tasks_file, A2.transpose())
-
-            tasks_file.write("+")
-
-            latexMatrix(tasks_file, A2.transpose())
-            latexCdot(tasks_file)
-            latexMatrix(tasks_file, C2)
-            latexCdot(tasks_file)
-            latexMatrix(tasks_file, B2)
-
-            tasks_file.write("+")
-
-            latexMatrix(tasks_file, A2.transpose())
-            latexCdot(tasks_file)
-            latexMatrix(tasks_file, C2)
-            latexCdot(tasks_file)
-            latexMatrix(tasks_file, D2)
-
-            tasks_file.write("\\]")
-
-        else:
-            tasks_file.write("\\[")
-
-            latexMatrix(tasks_file, D2)
-            latexCdot(tasks_file)
-            latexMatrix(tasks_file, B2)
-            latexCdot(tasks_file)
-            latexMatrix(tasks_file, B2.transpose())
-
-            tasks_file.write("+")
-
-            latexMatrix(tasks_file, C2)
-            latexCdot(tasks_file)
-            tasks_file.write("\\Biggl[")
-            latexMatrix(tasks_file, C2)
-            latexCdot(tasks_file)
-            latexMatrix(tasks_file, B2)
-            tasks_file.write("\\Biggl]^{T}")
-
-            tasks_file.write("-")
-
-            latexMatrix(tasks_file, A2)
-            latexCdot(tasks_file)
-            latexMatrix(tasks_file, B2.transpose())
-            tasks_file.write("^{2}")
-
-            tasks_file.write("+")
-            tasks_file.write("\\]")
-            tasks_file.write("\\[")
-            tasks_file.write("+")
-
-            latexMatrix(tasks_file, D2)
-            latexCdot(tasks_file)
-            tasks_file.write("\\Biggl[")
-            latexMatrix(tasks_file, C2)
-            latexCdot(tasks_file)
-            latexMatrix(tasks_file, B2)
-            tasks_file.write("\\Biggl]^{T}")
-
-            tasks_file.write("+")
-
-            latexMatrix(tasks_file, A2)
-            latexCdot(tasks_file)
-            tasks_file.write("\\Biggl[")
-            latexMatrix(tasks_file, D2)
-            latexCdot(tasks_file)
-            latexMatrix(tasks_file, B2)
-            tasks_file.write("\\Biggl]^{T}")
-
-            tasks_file.write("+")
-
-            latexMatrix(tasks_file, C2)
-            latexCdot(tasks_file)
-            latexMatrix(tasks_file, B2)
-            latexCdot(tasks_file)
-            latexMatrix(tasks_file, B2)
-
-            tasks_file.write("\\]")
-        tasks_file.write("\n\\medskip\\\\\n")
-
-        # Запись в файл "tasks" условия задачи 3
-        tasks_file.write("{\\noindent \\bf 3.} Вычислите $A^n$, где \\[A=")
-        latexMatrix(tasks_file, np.matrix(A_power_n[0]))
-        tasks_file.write("\\]\n")
-
-        tasks_file.write("\\newpage")
-
-        # Запись в файл "answers" заголовка
-        answers_file.write("\\begin{center}"
-                           "\\bf Ответы к индивидуальному домашнему заданию 1"
-                           "\\end{center}"
-                           "\\begin{center}"
-                           "{Группа БПМИ" + str(group) + ". Вариант " + str(variant) + "}\n\\end{center}\n")
-
-        # Запись в файл "answers" ответа к задаче 1
-        if random_value == 1:
-            answers_file.write("\\[\\]"
-                               "1.1. Должна получиться несовместная система со следующей матрицей: $$")
-            latexMatrix(answers_file, row_reduced_inconsistent)
-            answers_file.write("$$\n")
-
-            answers_file.write("\\[\\]"
-                               "1.2. Должна получиться совместная система с бесконечным количеством решений и следующей матрицей: $$")
-            latexMatrix(answers_file, row_reduced_infinite)
-            answers_file.write("$$\n")
-            answers_file.write("\\[\\] Общее решение данной СЛУ:"
-                               "\\begin{itemize}"
-                               "\\item"
-                               "$x_1 = " + str(0 - int(row_reduced_infinite[0, 2])) + "\\cdot x_3" +
-                               ("+" if row_reduced_infinite[0, 3] < 0 else "") + str(0 - int(row_reduced_infinite[0, 3])) + "\\cdot x_4" +
-                               ("+" if row_reduced_infinite[0, 4] >= 0 else "") + str(int(row_reduced_infinite[0, 4])) +
-                               "$\\item"
-                               "$x_2 = " + str(0 - int(row_reduced_infinite[1, 2])) + "\\cdot x_3" +
-                               ("+" if row_reduced_infinite[1, 3] < 0 else "") + str(0 - int(row_reduced_infinite[1, 3])) + "\\cdot x_4" +
-                               ("+" if row_reduced_infinite[1, 4] >= 0 else "") + str(int(row_reduced_infinite[1, 4])) +
-                               "$\\item $x_3 \\text{ любое }$ \\item $x_4 \\text{ любое }$\\end{itemize}\n")
-
-        else:
-            answers_file.write("\\[\\]"
-                               "1.1. Должна получиться совместная система с бесконечным количеством решений и следующей матрицей: $$")
-            latexMatrix(answers_file, row_reduced_infinite)
-            answers_file.write("$$\n")
-            answers_file.write("\\[\\] Общее решение данной СЛУ:"
-                               "\\begin{itemize}"
-                               "\\item"
-                               "$x_1 = " + str(0 - int(row_reduced_infinite[0, 2])) + "\\cdot x_3" +
-                               ("+" if row_reduced_infinite[0, 3] < 0 else "") + str(0 - int(row_reduced_infinite[0, 3])) + "\\cdot x_4" +
-                               ("+" if row_reduced_infinite[0, 4] >= 0 else "") + str(int(row_reduced_infinite[0, 4])) +
-                               "$\\item"
-                               "$x_2 = " + str(0 - int(row_reduced_infinite[1, 2])) + "\\cdot x_3" +
-                               ("+" if row_reduced_infinite[1, 3] < 0 else "") + str(0 - int(row_reduced_infinite[1, 3])) + "\\cdot x_4" +
-                               ("+" if row_reduced_infinite[1, 4] >= 0 else "") + str(int(row_reduced_infinite[1, 4])) +
-                               "$\\item $x_3 \\text{ любое }$ \\item $x_4 \\text{ любое }$\\end{itemize}\n")
-
-            answers_file.write("\\[\\]"
-                               "1.2. Должна получиться несовместная система со следующей матрицей: $$")
-            latexMatrix(answers_file, row_reduced_inconsistent)
-            answers_file.write("$$\n")
-
-
-        # Запись в файл "answers" ответа к задаче 2
-        answers_file.write("\\[\\]2. $")
-        latexMatrix(answers_file, Ans_T)
-        answers_file.write("$\n")
-
-        # Запись в файл "answers" ответа к задаче 3
-        answers_file.write("\\[\\]3. \\[ A=")
-        latexMatrix(answers_file, np.matrix(A_power_n[1]))
-        answers_file.write("\\]\n \\[ A^n=")
-        latexMatrix(answers_file, np.matrix(A_power_n[2]))
-        answers_file.write("\\]\n")
-        if i % 6 == 1 or i % 6 == 2:
-            answers_file.write("где $t={\\sum \\limits_{k=n-1}^{2n-2}{a^k}}$\n")
-
-        answers_file.write("\n\\newpage\n")
-
-    tasks_file.write("\\end{document}")
-    answers_file.write("\\end{document}")
+    tasksFile.write("\\end{document}")
+    answersFile.write("\\end{document}")
+    tasksFile.close()
+    answersFile.close()
 
 # B2[0, 0] = ((i ** 3 + 4) % 7 + i) % 5 + 2
 # B2[0, 1] = ((i ** 3 + 1) % 7 + i) % 8 + 1
@@ -576,3 +443,255 @@ for index in range(1, groups_number + 1):
 #         return A
 #     else:
 #         return simpleBasis(i + 15)
+#
+#
+# def powerTask(i):
+#     M11 = np.matrix([[1, "a", 0], [0, "a", 0], [0, "a", 1]])
+#     M22 = np.matrix([["a", 1, 1], [0, "a ^ 2", 0], [0, 0, "a"]])
+#     M33 = np.matrix([["a", 0, 1], [0, "a ^ 2", 1], [0, 0, "a"]])
+#     M44 = np.matrix([["a", 0, 0], [1, "a", 1], [0, 0, "a"]])
+#     M55 = np.matrix([["a", 1, 0], [0, "a", 0], [0, 1, "a"]])
+#     M66 = np.matrix([[1, 0, 0], ["a", "a", "a"], [0, 0, 1]])
+#
+#     a1 = (i + 1) % 4 + 2
+#     M1 = np.matrix([[1, a1, 0], [0, a1, 0], [0, a1, 1]])
+#     M2 = np.matrix([[a1, 1, 1], [0, a1 ** 2, 0], [0, 0, a1]])
+#     M3 = np.matrix([[a1, 0, 1], [0, a1 ** 2, 1], [0, 0, a1]])
+#     M4 = np.matrix([[a1, 0, 0], [1, a1, 1], [0, 0, a1]])
+#     M5 = np.matrix([[a1, 1, 0], [0, a1, 0], [0, 1, a1]])
+#     M6 = np.matrix([[1, 0, 0], [a1, a1, a1], [0, 0, 1]])
+#     SET = [M1, M2, M3, M4, M5, M6]
+#
+#     SET1 = [M11, M22, M33, M44, M55, M66]
+#
+#     R1 = np.matrix([[1, "\\frac{a(a^n - 1)}{a - 1}", 0],
+#                     [0, "a ^ n", 0],
+#                     [0, "\\frac{a(a^n - 1)}{a - 1}", 1]])
+#
+#     R2 = np.matrix([["a ^ n", "t", "na ^ {(n - 1)}"],
+#                     [0, "a ^ {2n}", 0],
+#                     [0, 0, "a ^ n"]])
+#
+#     R3 = np.matrix([["a ^ n", 0, "na ^ {(n - 1)}"],
+#                     [0, "a ^ {2n}", "t"],
+#                     [0, 0, "a ^ n"]])
+#
+#     R4 = np.matrix([["a ^ n", 0, 0],
+#                     ["na ^ {(n - 1)}", "a ^ n", "na ^ {(n - 1)}"],
+#                     [0, 0, "a ^ n"]])
+#
+#     R5 = np.matrix([["a ^ n", "na ^ {(n - 1)}", 0],
+#                     [0, "a ^ n", 0],
+#                     [0, "na ^ {(n - 1)}", "a ^ n"]])
+#
+#     R6 = np.matrix([[1, 0, 0],
+#                     ["\\frac{a(a^n - 1)}{a - 1}", "a ^ n", "\\frac{a(a^n - 1)}{a - 1}"],
+#                     [0, 0, 1]])
+#
+#     R = [R1, R2, R3, R4, R5, R6]
+#     RES = [SET[i % 6], SET1[i % 6], R[i % 6]]
+#     return RES
+# # Второе задание
+# lowest_bound = 1
+# highest_bound = 9
+#
+# B2 = np.matrix(np.random.randint(lowest_bound, highest_bound, (2, 2)))
+# C2 = np.matrix(np.random.randint(lowest_bound, highest_bound, (2, 2)))
+# D2 = np.matrix(np.random.randint(lowest_bound, highest_bound, (2, 2)))
+# Ans_T = []
+#
+# A2 = C2 + D2
+#
+# if ((i + 4) ** 3) % 3 == 0:
+#     Ans_T = (A2.transpose() * C2 * B2 -
+#              (B2 * A2).transpose() * B2 +
+#              A2.transpose() * D2 * B2 -
+#              C2.transpose() * A2 * A2.transpose() +
+#              A2.transpose() * (A2 * B2).transpose() -
+#              D2.transpose() * A2 * A2.transpose())
+#
+# elif ((i + 4) ** 3) % 3 == 1:
+#     Ans_T = (C2.transpose() * B2 * A2.transpose() -
+#              A2.transpose() * B2 * B2 +
+#              D2.transpose() * B2 * A2.transpose() -
+#              A2.transpose() * A2 * A2.transpose() +
+#              A2.transpose() * C2 * B2 +
+#              A2.transpose() * C2 * D2)
+#
+# else:
+#     Ans_T = (D2 * B2 * B2.transpose() +
+#              C2 * (C2 * B2).transpose() -
+#              A2 * B2.transpose() * B2.transpose() +
+#              D2 * (C2 * B2).transpose() +
+#              A2 * (D2 * B2).transpose() +
+#              C2 * B2 * B2)
+#
+# # Третье задание
+# A_power_n = powerTask(i)
+# # Запись в файл "tasks" условия задачи 2
+# tasksFile.write("{\\noindent \\bf2.} "
+#                  "Вычислите: ")
+# if (i + 4) ** 3 % 3 == 0:
+#     tasksFile.write("\\[")
+#     latexMatrixProduct(tasksFile, [A2.transpose(), C2, B2])
+#     tasksFile.write("-")
+#
+#     tasksFile.write("\\Biggl[")
+#     latexMatrixProduct(tasksFile, [B2, A2])
+#     tasksFile.write("\\Biggl]^{T}")
+#     latexCdot(tasksFile)
+#     latexMatrix(tasksFile, B2)
+#
+#     tasksFile.write("+")
+#
+#     latexMatrixProduct(tasksFile, [A2.transpose(), D2, B2])
+#
+#     tasksFile.write("-")
+#     tasksFile.write("\\]")
+#     tasksFile.write("\\[")
+#     tasksFile.write("-")
+#
+#     latexMatrix(tasksFile, C2.transpose())
+#     latexCdot(tasksFile)
+#     latexMatrix(tasksFile, A2)
+#     latexCdot(tasksFile)
+#     latexMatrix(tasksFile, A2.transpose())
+#
+#     tasksFile.write("+")
+#
+#     latexMatrix(tasksFile, A2.transpose())
+#     latexCdot(tasksFile)
+#     tasksFile.write("\\Biggl[")
+#     latexMatrix(tasksFile, A2)
+#     latexCdot(tasksFile)
+#     latexMatrix(tasksFile, B2)
+#     tasksFile.write("\\Biggl]^{T}")
+#
+#     tasksFile.write("-")
+#
+#     latexMatrix(tasksFile, D2.transpose())
+#     latexCdot(tasksFile)
+#     latexMatrix(tasksFile, A2)
+#     latexCdot(tasksFile)
+#     latexMatrix(tasksFile, A2.transpose())
+#
+#     tasksFile.write("\\]")
+#
+# elif (i + 4) ** 3 % 3 == 1:
+#     tasksFile.write("\\[")
+#
+#     latexMatrix(tasksFile, C2.transpose())
+#     latexCdot(tasksFile)
+#     latexMatrix(tasksFile, B2)
+#     latexCdot(tasksFile)
+#     latexMatrix(tasksFile, A2.transpose())
+#
+#     tasksFile.write("-")
+#
+#     latexMatrix(tasksFile, A2.transpose())
+#     latexCdot(tasksFile)
+#     latexMatrix(tasksFile, A2)
+#     tasksFile.write("^{2}")
+#
+#     tasksFile.write("+")
+#
+#     latexMatrix(tasksFile, D2.transpose())
+#     latexCdot(tasksFile)
+#     latexMatrix(tasksFile, B2)
+#     latexCdot(tasksFile)
+#     latexMatrix(tasksFile, A2.transpose())
+#
+#     tasksFile.write("-")
+#     tasksFile.write("\\]")
+#     tasksFile.write("\\[")
+#     tasksFile.write("-")
+#
+#     latexMatrix(tasksFile, A2.transpose())
+#     latexCdot(tasksFile)
+#     latexMatrix(tasksFile, A2)
+#     latexCdot(tasksFile)
+#     latexMatrix(tasksFile, A2.transpose())
+#
+#     tasksFile.write("+")
+#
+#     latexMatrix(tasksFile, A2.transpose())
+#     latexCdot(tasksFile)
+#     latexMatrix(tasksFile, C2)
+#     latexCdot(tasksFile)
+#     latexMatrix(tasksFile, B2)
+#
+#     tasksFile.write("+")
+#
+#     latexMatrix(tasksFile, A2.transpose())
+#     latexCdot(tasksFile)
+#     latexMatrix(tasksFile, C2)
+#     latexCdot(tasksFile)
+#     latexMatrix(tasksFile, D2)
+#
+#     tasksFile.write("\\]")
+#
+# else:
+#     tasksFile.write("\\[")
+#
+#     latexMatrix(tasksFile, D2)
+#     latexCdot(tasksFile)
+#     latexMatrix(tasksFile, B2)
+#     latexCdot(tasksFile)
+#     latexMatrix(tasksFile, B2.transpose())
+#
+#     tasksFile.write("+")
+#
+#     latexMatrix(tasksFile, C2)
+#     latexCdot(tasksFile)
+#     tasksFile.write("\\Biggl[")
+#     latexMatrix(tasksFile, C2)
+#     latexCdot(tasksFile)
+#     latexMatrix(tasksFile, B2)
+#     tasksFile.write("\\Biggl]^{T}")
+#
+#     tasksFile.write("-")
+#
+#     latexMatrix(tasksFile, A2)
+#     latexCdot(tasksFile)
+#     latexMatrix(tasksFile, B2.transpose())
+#     tasksFile.write("^{2}")
+#
+#     tasksFile.write("+")
+#     tasksFile.write("\\]")
+#     tasksFile.write("\\[")
+#     tasksFile.write("+")
+#
+#     latexMatrix(tasksFile, D2)
+#     latexCdot(tasksFile)
+#     tasksFile.write("\\Biggl[")
+#     latexMatrix(tasksFile, C2)
+#     latexCdot(tasksFile)
+#     latexMatrix(tasksFile, B2)
+#     tasksFile.write("\\Biggl]^{T}")
+#
+#     tasksFile.write("+")
+#
+#     latexMatrix(tasksFile, A2)
+#     latexCdot(tasksFile)
+#     tasksFile.write("\\Biggl[")
+#     latexMatrix(tasksFile, D2)
+#     latexCdot(tasksFile)
+#     latexMatrix(tasksFile, B2)
+#     tasksFile.write("\\Biggl]^{T}")
+#
+#     tasksFile.write("+")
+#
+#     latexMatrix(tasksFile, C2)
+#     latexCdot(tasksFile)
+#     latexMatrix(tasksFile, B2)
+#     latexCdot(tasksFile)
+#     latexMatrix(tasksFile, B2)
+#
+#     tasksFile.write("\\]")
+# tasksFile.write("\n\\medskip\\\\\n")
+#
+# # Запись в файл "tasks" условия задачи 3
+# tasksFile.write("{\\noindent \\bf 3.} Вычислите $A^n$, где \\[A=")
+# latexMatrix(tasksFile, np.matrix(A_power_n[0]))
+# tasksFile.write("\\]\n")
+#
