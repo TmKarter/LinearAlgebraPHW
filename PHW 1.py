@@ -118,7 +118,57 @@ def latexFrac(ab):
     denominator = denominator // gcd
     if denominator == 1:
         return str(numerator)
-    return "\\nicefrac{" + str(numerator) + "}{" + str(denominator) + "}"
+    elif denominator == -1:
+        return str(-numerator)
+    sign = ""
+    if numerator * denominator < 0:
+        sign = "-"
+        numerator = abs(numerator)
+        denominator = abs(denominator)
+    return sign + "\\nicefrac{" + str(numerator) + "}{" + str(denominator) + "}"
+
+
+def writeGeneralSolution(matrix, last_column_is_free, file):
+    depended = []
+    for row in range(matrix.shape[0]):
+        for column in range(matrix.shape[1]):
+            if matrix[row, column] != 0:
+                depended.append(column)
+                break
+    free = []
+    for column in range(matrix.shape[1]):
+        if column in depended or column == matrix.shape[1] - 1 and last_column_is_free:
+            continue
+        free.append(column)
+    for row in range(len(depended)):
+        file.write("\\item $x_" + str(depended[row] + 1) + " = ")
+        printed_count = 0
+        for column in free:
+            if printed_count != 0:
+                if -matrix[row, column] > 0:
+                    file.write("+")
+            if matrix[row, column] != 0:
+                if abs(matrix[row, column]) != 1:
+                    file.write(latexFrac(Fraction(str(-matrix[row, column]))) + " \\cdot " + "x_" + str(column + 1))
+                else:
+                    file.write(("-" if matrix[row, column] == 1 else "") + "x_" + str(column + 1))
+                printed_count += 1
+        if last_column_is_free:
+            column = matrix.shape[1] - 1
+            if printed_count != 0:
+                if matrix[row, column] > 0:
+                    file.write("+")
+            if matrix[row, column] != 0:
+                file.write(latexFrac(Fraction(str(matrix[row, column]))))
+        file.write("$")
+    free_variables = "$"
+    for variable in free:
+        free_variables += "x_" + str(variable + 1)
+        if variable != free[-1]:
+            free_variables += ", "
+        else:
+            free_variables += "$ "
+    file.write("\\item " + free_variables + "– любые. \n")
 
 
 def generateRandomMatrixWithNoZeros(lowest_bound, highest_bound, rows, columns, variant):
@@ -212,7 +262,7 @@ def haveCommonSigns(first, second, howMany):
     return False
 
 
-def haveTwoSimiliarElements(vector):
+def hasTwoSimiliarElements(vector):
     for i in range(len(vector)):
         for j in range(i + 1, len(vector)):
             if vector[i] == vector[j]:
@@ -380,10 +430,10 @@ def writeFirstTask(A, B, C, D, u, v, tasksFile, answers, variant):
     tasksFile.write("\n \\medskip \n")
 
     answer = first_term + second_term + third_term + fourth_term + fifth_term
-    answers.write("\\[\\] 1. Должна получиться следующая матрица: $$")
+    answers.write("\\[\\] \\textbf{1.} Должна получиться следующая матрица: $$")
     latexMatrix(answers, answer)
     answers.write("$$\n")
-    answers.write("\\[\\] Слагаемые слева направо: \\begin{center}\n$$")
+    answers.write("\\[\\] Слагаемые слева направо: $$")
     latexMatrix(answers, first_term)
     answers.write(" + ")
     latexMatrix(answers, second_term)
@@ -393,7 +443,7 @@ def writeFirstTask(A, B, C, D, u, v, tasksFile, answers, variant):
     latexMatrix(answers, fourth_term)
     answers.write(" + ")
     latexMatrix(answers, fifth_term)
-    answers.write("$$\\end{center}\n")
+    answers.write("$$\n")
 
 
 infinitePrev = []
@@ -412,7 +462,7 @@ def generateSecondTask(variant):
     np.random.seed(variant + count)
     first_basis = np.random.randint(numbers_lowest_bound, numbers_highest_bound, (4, 1))
     count += 1
-    while haveTwoSimiliarElements(first_basis):
+    while hasTwoSimiliarElements(first_basis):
         np.random.seed(variant + count)
         first_basis = np.random.randint(numbers_lowest_bound, numbers_highest_bound, (4, 1))
         count += 1
@@ -423,7 +473,7 @@ def generateSecondTask(variant):
     while (np.linalg.matrix_rank(np.matrix(np.column_stack((first_basis, second_basis)))) != 2 or
            haveTwoCommonElements(first_basis, second_basis) or
            haveCommonSigns(first_basis, second_basis, 2) or
-           haveTwoSimiliarElements(second_basis)):
+           hasTwoSimiliarElements(second_basis)):
         np.random.seed(variant + count)
         second_basis = np.random.randint(numbers_lowest_bound, numbers_highest_bound, (4, 1))
         count += 1
@@ -434,7 +484,7 @@ def generateSecondTask(variant):
            np.array_equal(third_vector, first_basis + second_basis) or
            np.array_equal(third_vector, first_basis - second_basis) or
            np.array_equal(third_vector, second_basis - first_basis) or
-           haveTwoSimiliarElements(third_vector) or
+           hasTwoSimiliarElements(third_vector) or
            hasElementOff(third_vector, 27)):
         np.random.seed(variant + count)
         third_vector = np.random.randint(coefficient_lowest_bound, coefficient_highest_bound) * first_basis
@@ -452,7 +502,7 @@ def generateSecondTask(variant):
            np.array_equal(fourth_vector, third_vector) or
            haveTwoCommonElements(third_vector, fourth_vector) or
            haveCommonSigns(third_vector, fourth_vector, 2) or
-           haveTwoSimiliarElements(fourth_vector) or
+           hasTwoSimiliarElements(fourth_vector) or
            hasElementOff(fourth_vector, 27)):
         np.random.seed(variant + count)
         fourth_vector = np.random.randint(coefficient_lowest_bound, coefficient_highest_bound) * first_basis
@@ -557,27 +607,29 @@ def writeSecondTask(equations, infinite, inconsistent, tasksFile, answersFile, v
     tasksFile.write("(a)\\quad")
     if inconsistentFirst:  # Сначала несовместная система
         writeSOLE(equations, inconsistent, tasksFile, ";")
-        answersFile.write("\\[\\] 2. (а) Должна получиться несовместная система со следующей матрицей: $$")
-        latexMatrix(answersFile, row_reduced_inconsistent)
-        answersFile.write("$$\n")
-    else:  # Бесконечное число решений сначале
-        writeSOLE(equations, infinite, tasksFile, ";")
-        answersFile.write("\\[\\] 2. (а) Должна получиться совместная система с бесконечным количеством решений и следующей матрицей: $$")
-        latexMatrix(answersFile, row_reduced_infinite)
-        answersFile.write("$$\n")
-
-    tasksFile.write("\\qquad (б)\\quad")
-
-    if inconsistentFirst:  # Бесконечное число решений в конце
+        tasksFile.write("\\qquad (б)\\quad")
         writeSOLE(equations, infinite, tasksFile, ".")
-        answersFile.write("\\[\\] (б) Должна получиться совместная система с бесконечным количеством решений и следующей матрицей: $$")
-        latexMatrix(answersFile, row_reduced_infinite)
-        answersFile.write("$$\n")
-    else:  # Несовместная система в конце
-        writeSOLE(equations, inconsistent, tasksFile, ".")
-        answersFile.write("\\[\\] (б) Должна получиться несовместная система со следующей матрицей: $$")
+
+        answersFile.write("\\[\\] \\textbf{2.} (а) Несовместная система, (б) бесконечное количество решений. Матрицы ниже: \\begin{center} \\quad $")
         latexMatrix(answersFile, row_reduced_inconsistent)
-        answersFile.write("$$\n")
+        answersFile.write("$ \\qquad $")
+        latexMatrix(answersFile, row_reduced_infinite)
+        answersFile.write("$ \\end{center} \n")
+    else:  # Бесконечное число решений сначала
+        writeSOLE(equations, infinite, tasksFile, ";")
+        tasksFile.write("\\qquad (б)\\quad")
+        writeSOLE(equations, inconsistent, tasksFile, ".")
+
+        answersFile.write("\\[\\] \\textbf{2.} (а) Бесконечное количество решений, (б) несовместная система. Матрицы ниже: \\begin{center} \\quad $")
+        latexMatrix(answersFile, row_reduced_infinite)
+        answersFile.write("$ \\qquad $")
+        latexMatrix(answersFile, row_reduced_inconsistent)
+        answersFile.write("$ \\end{center} \n")
+
+    answersFile.write("\\begin{itemize} \\item[] Общее решение:")
+    writeGeneralSolution(row_reduced_infinite, True, answersFile)
+    answersFile.write("\n \\end{itemize} ")
+
     tasksFile.write("\\end{center}\n")
     tasksFile.write("\n \\medskip \n")
 
@@ -651,7 +703,7 @@ def writeThirdTask(A, P, X, tasksFile, answersFile):
     tasksFile.write(",\\] удовлетворяющие условию $AX = XA.$\n")
     tasksFile.write("\n \\medskip \n")
 
-    answersFile.write("3. Ответ приведен в терминах следующей нумерации переменных матрицы X: $$\n")
+    answersFile.write("\\textbf{3.} Ответ приведен в терминах следующей нумерации переменных матрицы X: $$\n")
     variable = 1
     tempX = [["" for i in range(3)] for j in range(3)]
     for row in range(3):
@@ -700,6 +752,9 @@ def writeThirdTask(A, P, X, tasksFile, answersFile):
     equationsThird = np.matrix(sp.Matrix(equationsThird).rref()[0])
     latexMatrix(answersFile, equationsThird)
     answersFile.write("$$\n")
+    answersFile.write("\\begin{itemize} \\item[] Общее решение:")
+    writeGeneralSolution(equationsThird, False, answersFile)
+    answersFile.write("\\end{itemize} ")
 
 
 def generateFourthTask(i):  # Задание выполнено Ильёй Анищенко, большая благодарность ему за помощь
@@ -822,11 +877,11 @@ def writeFourthTask(str_1, str_2, str_3, b_part, ans_ab, ans_a, ans_b):
                     "\\medskip\n")
 
     # код для внесения в ответы
-    answersFile.write("{\\noindent 4.} Для данной СЛУ справедливы следующие утверждения: \\begin{itemize} \\item "
-                      "При $ab \\ne " + latexFrac(ans_ab) + "$ СЛУ имеет единственное решение.\\\\\n\\item \n" +
-                      "При $ab = " + latexFrac(ans_ab) + "$, $a = " + latexFrac(ans_a) + "$ и $b = " + latexFrac(ans_b) + "$ СЛУ имеет бесконечно много решений.\\\\\n\item \n" +
-                      "При $ab = " + latexFrac(ans_ab) + "$, $a \\ne" + latexFrac(ans_a) + "$ и $b \\ne" + latexFrac(ans_b) + "$ СЛУ несовместна.\n"
-                                                                                                                              "\\end{itemize}\n")
+    answersFile.write("\\textbf{4.} Для данной СЛУ справедливы следующие утверждения: \\begin{itemize}"
+                      "\\item При $ab \\ne " + latexFrac(ans_ab) + "$ СЛУ имеет единственное решение. \n" +
+                      "\\item При $ab = " + latexFrac(ans_ab) + "$, $a = " + latexFrac(ans_a) + "$ и $b = " + latexFrac(ans_b) + "$ СЛУ имеет бесконечно много решений. \n" +
+                      "\\item При $ab = " + latexFrac(ans_ab) + "$, $a \\ne" + latexFrac(ans_a) + "$ и $b \\ne" + latexFrac(ans_b) + "$ СЛУ несовместна.\n"
+                                                                                                                                     "\\end{itemize}\n")
 
 
 groups_size = 60
