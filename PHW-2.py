@@ -132,8 +132,8 @@ def generateSecondTask():
             if (k1 * (alpha * u1 + beta * u2) + k2 * (gamma * u1 + delta * u2) == u3).all():
                 testForSimpleSolution = True
 
-    while (abs(alpha * beta) < 3 and abs(gamma * delta) < 3 or
-           la.matrix_rank(np.concatenate((alpha * u1 + beta * u2, gamma * u1 + delta * u2), 1)) != 2 or
+    while (abs(alpha * beta) < 2 and abs(gamma * delta) < 2 or
+           la.matrix_rank(np.c_[alpha * u1 + beta * u2, gamma * u1 + delta * u2]) != 2 or
            testForSimpleSolution):
         alpha, beta, gamma, delta = randomNumbers(-7, 7, 4)
         testForSimpleSolution = False
@@ -148,32 +148,27 @@ def generateSecondTask():
     size = (4, 1)
 
     u4 = randomColumn(low, high, size, False, 4)
-    while la.matrix_rank(np.concatenate((u1, u2, u3, u4), 1)) == 2:
+    while la.matrix_rank(np.c_[u1, u2, u3, u4]) == 2:
         u4 = randomColumn(low, high, size, False, 4)
 
-    if (len(np.unique([abs(elem) for elem in u1])) < 3 or
-            len(np.unique([abs(elem) for elem in u2])) < 3 or
-            len(np.unique([abs(elem) for elem in u3])) < 3 or
-            len(np.unique([abs(elem) for elem in u4])) < 3 or
+    if (len(np.unique([elem for elem in u1])) < 3 and
+            len(np.unique([elem for elem in u2])) < 3 or
+            len(np.unique([elem for elem in u3])) < 3 and
+            len(np.unique([elem for elem in u4])) < 3 or
             len({tuple(abs(elem) for elem in np.array(row)[0]) for row in [u1, u2, u3, u4]}) < 4):
         return generateSecondTask()
 
-    matrix = np.matrix(np.column_stack((u1, u2, u3, u4)))
-
-    RREF = np.matrix(sp.Matrix(matrix).rref()[0])
-    for row in RREF:
-        for element in np.array(row)[0]:
-            if "<class 'sympy.core.numbers.Rational'>" == str(type(element)) or "<class 'sympy.core.numbers.Half'>" == str(type(element)):
-                return generateSecondTask()
-
     alpha, beta = randomNumbers(-6, 8, 2)
-    while alpha in [-1, 0, 1] or beta in [-1, 0, 1] or max([abs(elem) for elem in alpha * originalU1 + beta * originalU2]) > 25:
+    while (abs(alpha * beta) < 2 or max([abs(elem) for elem in alpha * originalU1 + beta * originalU2]) > 25 or
+           la.matrix_rank(np.c_[alpha * originalU1 + beta * originalU2, u1]) == 1 or
+           la.matrix_rank(np.c_[alpha * originalU1 + beta * originalU2, u2]) == 1 or
+           la.matrix_rank(np.c_[alpha * originalU1 + beta * originalU2, u3]) == 1):
         alpha, beta = randomNumbers(-6, 8, 2)
 
     v1 = alpha * originalU1 + beta * originalU2
 
     v2 = randomColumn(low, high, size, False, 4)
-    while la.matrix_rank(np.c_[matrix, v2]) != 4:
+    while la.matrix_rank(np.c_[u1, u2, u3, u4, v2]) != 4:
         v2 = randomColumn(low, high, size, False, 4)
 
     shuffle = False
@@ -190,8 +185,15 @@ def generateSecondTask():
             if abs(elem) >= 10:
                 countDoubles += 1
 
-    if countZeros >= 2 or countDoubles >= 4:
+    if countZeros >= 2 or countDoubles >= 5:
         return generateSecondTask()
+
+    matrix = np.matrix(np.column_stack((u1, u2, u3, u4)))
+    RREF = np.matrix(sp.Matrix(matrix).rref()[0])
+    for row in RREF:
+        for element in np.array(row)[0]:
+            if "<class 'sympy.core.numbers.Rational'>" == str(type(element)) or "<class 'sympy.core.numbers.Half'>" == str(type(element)):
+                return generateSecondTask()
 
     return u1, u2, u3, u4, v1, v2, shuffle
 
