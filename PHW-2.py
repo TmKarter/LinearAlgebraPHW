@@ -222,6 +222,82 @@ def writeSecondTask(tasksFile, answersFile):
     tasksFile.write("\\] \n ровно один лежит в $U$, и дополните этот вектор до базиса подпространства $U$. \n")
 
 
+def generateThirdTask():
+    global randomSeed
+    low = -5
+    high = 5
+    size = (1, 4)
+
+    a1 = randomNumbers(low, high, size)
+    a2 = randomNumbers(low, high, size)
+    a1[0, 1] = 0
+    a2[0, 2] = 0  # линейная независимость а1 и а2 почтинаверное
+    a3 = 3 * a1 - 2 * a2
+    a4 = 2 * a1 - 3 * a2
+    mat_a = np.concatenate((a1, a2, a3, a4), axis=0)
+    # print(mat_a)
+    rank_l1 = la.matrix_rank(mat_a)
+    mat_b = np.zeros((4, 4))
+    mat_c = np.zeros((5, 4))
+    rank_l2 = rank_u = rank_w = -1
+    # в зависимости от seed генерим 3 случая
+    var = randomNumbers(low, high, 1)
+    if (var % 3 == 0):
+        b1 = randomNumbers(low, high, size)
+        b2 = 2 * a1 - a2
+        b3 = 2 * b1 - b2
+        b4 = b1 - 2 * b2
+        mat_b = np.concatenate((b1, b2, b3, b4), axis=0)
+        rank_l2 = la.matrix_rank(mat_b)
+        mat_c = np.concatenate((a1, a2, b1, b2, b3), axis=0)
+        rank_u = la.matrix_rank(mat_c)
+        rank_w = 2 + rank_l2 - rank_u
+    elif (var % 3 == 1):
+        b1 = randomNumbers(low, high, size)
+        b2 = randomNumbers(low, high, 1) * a1 + randomNumbers(low, high, 1) * a2
+        b3 = a1 + randomNumbers(low, high, 1) * a2
+        b4 = b1 - 2 * b2
+        mat_b = np.concatenate((b1, b2, b3, b4), axis=0)
+        rank_l2 = la.matrix_rank(mat_b)
+        mat_c = np.concatenate((a1, a2, b1, b2, b3), axis=0)
+        rank_u = la.matrix_rank(mat_c)
+        rank_w = 2 + rank_l2 - rank_u
+    else:
+        b1 = randomNumbers(low, high, 1) * a2 + randomNumbers(low, high, 1) * a1
+        b2 = randomNumbers(low, high, 1) * a1 + a2
+        b3 = 2 * b1 - b2
+        b4 = b1 - 2 * b2
+        mat_b = np.concatenate((b1, b2, b3, b4), axis=0)
+        rank_l2 = la.matrix_rank(mat_b)
+        mat_c = np.concatenate((a1, a2, b1, b2, b3), axis=0)
+        rank_u = la.matrix_rank(mat_c)
+        rank_w = 2 + rank_l2 - rank_u
+    return mat_a, mat_b, rank_l1, rank_l2, rank_u, rank_w
+
+
+def writeThirdTask(tasksFile, answersFile):
+    mat_a, mat_b, rank_l1, rank_l2, rank_u, rank_w = generateThirdTask()
+
+    tasksFile.write("{\\noindent \\bf 3.} "
+                    "Найдите базис и размерность каждого из подпространств $L_1,\\ L_2,\\ U = L_1 + L_2,\\ W = L_1 \\cap L_2$ пространства $\\R^4$, если $L_1$~--- линейная оболочка векторов\n")
+    tasksFile.write("\\["
+                    "a_1 = (" + str(mat_a[0, 0]) + ", " + str(mat_a[0, 1]) + ", " + str(mat_a[0, 2]) + ", " + str(mat_a[0, 3]) + ")")
+    tasksFile.write(", \\quad a_2 = (" + str(mat_a[1, 0]) + ", " + str(mat_a[1, 1]) + ", " + str(mat_a[1, 2]) + ", " + str(mat_a[1, 3]) + ")")
+    tasksFile.write(", \\quad a_3 = (" + str(mat_a[2, 0]) + ", " + str(mat_a[2, 1]) + ", " + str(mat_a[2, 2]) + ", " + str(mat_a[2, 3]) + ")")
+    tasksFile.write(", \\quad a_4 = (" + str(mat_a[3, 0]) + ", " + str(mat_a[3, 1]) + ", " + str(mat_a[3, 2]) + ", " + str(mat_a[3, 3]) + ")")
+    tasksFile.write(", \\] \n ")
+    tasksFile.write("a $L_2$~--- линейная оболочка векторов\n")
+    tasksFile.write("\\["
+                    "b_1 = (" + str(mat_b[0, 0]) + ", " + str(mat_b[0, 1]) + ", " + str(mat_b[0, 2]) + ", " + str(mat_b[0, 3]) + ")")
+    tasksFile.write(", \\quad b_2 = (" + str(mat_b[1, 0]) + ", " + str(mat_b[1, 1]) + ", " + str(mat_b[1, 2]) + ", " + str(mat_b[1, 3]) + ")")
+    tasksFile.write(", \\quad b_3 = (" + str(mat_b[2, 0]) + ", " + str(mat_b[2, 1]) + ", " + str(mat_b[2, 2]) + ", " + str(mat_b[2, 3]) + ")")
+    tasksFile.write(", \\quad b_4 = (" + str(mat_b[3, 0]) + ", " + str(mat_b[3, 1]) + ", " + str(mat_b[3, 2]) + ", " + str(mat_b[3, 3]) + ")")
+    tasksFile.write(".\\] \n")
+
+    answersFile.write("{\\noindent \\bf 3.} ")
+    answersFile.write("dim $L_1$ = " + str(rank_l1) + ", dim $L_2$ = " + str(rank_l2) + ", dim U = " + str(rank_u) + ", dim W = " + str(rank_w) + ".\n")
+
+
 groupsSize = 60
 groupsNumber = 9
 
@@ -241,7 +317,8 @@ for index in range(3, groupsNumber + 1):
         headers.answersHeader(answersFile, group, variant)
 
         # writeFirstTask(tasksFile, answersFile)
-        writeSecondTask(tasksFile, answersFile)
+        # writeSecondTask(tasksFile, answersFile)
+        writeThirdTask(tasksFile, answersFile)
 
         tasksFile.write("\n \\newpage\n")
         answersFile.write("\n \\newpage\n")
