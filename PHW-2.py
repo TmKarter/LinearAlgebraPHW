@@ -327,3 +327,51 @@ for index in range(3, groupsNumber + 1):
     answersFile.write("\n \\end{document}")
     tasksFile.close()
     answersFile.close()
+    
+def generateFourthTask():
+    global randomSeed
+    low = -10
+    high = 10
+    size = 1
+    
+    p1 = randomNumbers(low, high, 1)
+    while (p1 == 0):
+        p1 = randomNumbers(low, high, 1)
+    p2 = randomNumbers(low, high, 1)
+    while (p2 == 0 or p1 == p2):
+        p2 = randomNumbers(low, high, 1)
+    q1 = randomNumbers(low, high, 1)
+    while (q1 == 0 or p1 == q1):
+        q1 = randomNumbers(low, high, 1)
+    q2 = randomNumbers(low, high, 1)
+    while (q2 == 0 or q1 == q2 or q2 == p2):
+        q2 = randomNumbers(low, high, 1)
+    mat_cur = np.array([[1,0,-p1,-q1],[0,0,0,0],[0,1,-p2,-q2],[0,0,0,0]])
+    mat_rand = randomNumbers(-41, 41, (4, 4))
+    mat_u = np.dot(mat_rand, mat_cur)
+    mat_ans = np.array([[*p1, p2, 1, 0],[q1,q2,0,1]])
+    return mat_ans, mat_u
+
+def writeThirdTask(tasksFile, answersFile):
+    mat_ans, mat_u = generateFourthTask()
+    tasksFile.write("{\\noindent \\bf 4.} "
+                    "Пусть $U$~---подпространство в $R^4$, натянутое на векторы\n")
+    tasksFile.write("\\["
+                    "u_1 = (" + str(mat_u[0, 0]) + ", " + str(mat_u[0, 1]) + ", " + str(mat_u[0, 2]) + ", " + str(mat_u[0, 3]) + ")")
+    tasksFile.write(", \\quad u_2 = (" + str(mat_u[1, 0]) + ", " + str(mat_u[1, 1]) + ", " + str(mat_u[1, 2]) + ", " + str(mat_u[1, 3]) + ")")
+    tasksFile.write(", \\quad u_3 = (" + str(mat_u[2, 0]) + ", " + str(mat_u[2, 1]) + ", " + str(mat_u[2, 2]) + ", " + str(mat_u[2, 3]) + ")")
+    tasksFile.write(", \\quad u_4 = (" + str(mat_u[3, 0]) + ", " + str(mat_u[3, 1]) + ", " + str(mat_u[3, 2]) + ", " + str(mat_u[3, 3]) + ")")
+    tasksFile.write(", \\] \n ")
+    tasksFile.write("Составьте однородную систему линейных уравнений, у которой множество решений совпадает с $U$")
+    answersFile.write("{\\noindent \\bf 4.} ")
+    answersFile.write(" Общий метод решения выглядит так: \n"
+                      "1. Составляется однородная система, строками матрицы которой являются координаты данных векторов \n"
+                      "2. Находится её фундаментальное решение \n"
+                      "3. Матрицей искомой однородной системы является матрица, строками которой являются векторы полученного фундаментального решения \n"
+                      "Итоговая система: \n"
+                      "\\[\\begin{cases}")
+    answersFile.write(str(mat_ans[0,0]) + "$x_1$" + "+" + str(mat_ans[0,1]) +  "$x_2$" + "+" + "$x_3$ = 0" + "\\\\")
+    answersFile.write(str(mat_ans[1,0]) + "$x_1$" + "+" + str(mat_ans[1,1]) + "$x_2$" + "+" + "$x_4$ = 0")
+    answersFile.write("\\end{cases}\\]\n")
+    answersFile.write("Конечно, студенты могут предъявить т какую-то другую СЛУ, порожденную данным базисом.\n"
+                      "Однако, вот эта СЛУ --- самый очевидный и естественный ответ.\n")
