@@ -94,7 +94,9 @@ def writeFirstTask(tasksFile, answersFile):
                     "\\[ A = ")
     latex.latexMatrix(tasksFile, matrix)
     tasksFile.write("\\]\n"
-                    "в виде суммы $r$ матриц ранга 1, где $r = \\operatorname{rk} A$.")
+                    "в виде суммы $r$ матриц ранга 1, где $r = \\operatorname{rk} A$. \\\\ \\\\")
+
+    tasksFile.write("\n \\medskip \n")
 
     RREF = np.matrix(sp.Matrix(matrix).rref()[0])
 
@@ -203,23 +205,22 @@ def writeSecondTask(tasksFile, answersFile):
 
     tasksFile.write("{\\noindent \\bf 2.} "
                     "Пусть $U$ --- подпространство в $\R^4$, порождённое векторами \n"
-                    "\\["
-                    "u_1 = ")
-    latex.latexMatrix(tasksFile, u1)
-    tasksFile.write(", \n u_2 = ")
-    latex.latexMatrix(tasksFile, u2)
-    tasksFile.write(", \n u_3 = ")
-    latex.latexMatrix(tasksFile, u3)
-    tasksFile.write(", \n u_4 = ")
-    latex.latexMatrix(tasksFile, u4)
+                    "\\[")
+    latex.latexRowVector(tasksFile, u1, "u_1")
+    tasksFile.write(", \\quad ")
+    latex.latexRowVector(tasksFile, u2, "u_2")
+    tasksFile.write(", \\quad ")
+    latex.latexRowVector(tasksFile, u3, "u_3")
+    tasksFile.write(", \\quad ")
+    latex.latexRowVector(tasksFile, u4, "u_4")
     tasksFile.write(".\\] \n"
                     "Докажите, что из двух векторов \n"
-                    "\\["
-                    "v_1 = ")
-    latex.latexMatrix(tasksFile, v1)
-    tasksFile.write(", \n v_2 = ")
-    latex.latexMatrix(tasksFile, v2)
-    tasksFile.write("\\] \n ровно один лежит в $U$, и дополните этот вектор до базиса подпространства $U$. \n")
+                    "\\[")
+    latex.latexRowVector(tasksFile, v1, "v_1")
+    tasksFile.write(", \\quad ")
+    latex.latexRowVector(tasksFile, v2, "v_2")
+    tasksFile.write("\\] \n ровно один лежит в $U$, и дополните этот вектор до базиса подпространства $U$. ")
+    tasksFile.write("\n \\\\ \\\\ \\medskip \n")
 
 
 def generateThirdTask():
@@ -272,6 +273,39 @@ def generateThirdTask():
         mat_c = np.concatenate((a1, a2, b1, b2, b3), axis=0)
         rank_u = la.matrix_rank(mat_c)
         rank_w = 2 + rank_l2 - rank_u
+
+    countZeros = 0
+    countDoubles = 0
+    badVector = False
+    for i in range(4):
+        vector = mat_a[i, :]
+        if len({abs(elem) for elem in vector}) < 3:
+            badVector = True
+        for elem in np.array(vector):
+            if elem == 0:
+                countZeros += 1
+            if abs(elem) >= 10:
+                countDoubles += 1
+
+    if countZeros >= 3 or countDoubles >= 5 or badVector:
+        return generateThirdTask()
+
+    countZeros = 0
+    countDoubles = 0
+    badVector = False
+    for i in range(4):
+        vector = mat_b[i, :]
+        if len({abs(elem) for elem in vector}) < 2:
+            badVector = True
+        for elem in np.array(vector):
+            if elem == 0:
+                countZeros += 1
+            if abs(elem) >= 10:
+                countDoubles += 1
+
+    if countZeros >= 3 or countDoubles >= 5 or badVector:
+        return generateThirdTask()
+
     return mat_a, mat_b, rank_l1, rank_l2, rank_u, rank_w
 
 
@@ -279,7 +313,7 @@ def writeThirdTask(tasksFile, answersFile):
     mat_a, mat_b, rank_l1, rank_l2, rank_u, rank_w = generateThirdTask()
 
     tasksFile.write("{\\noindent \\bf 3.} "
-                    "Найдите базис и размерность каждого из подпространств $L_1,\\ L_2,\\ U = L_1 + L_2,\\ W = L_1 \\cap L_2$ пространства $\\R^4$, если $L_1$~--- линейная оболочка векторов\n")
+                    "Найдите базис и размерность каждого из подпространств $L_1,\\ L_2,\\ U = L_1 + L_2,\\ W = L_1 \\cap L_2$ пространства $\\R^4$, если $L_1$ --- линейная оболочка векторов\n")
     tasksFile.write("\\["
                     "a_1 = (" + str(mat_a[0, 0]) + ", " + str(mat_a[0, 1]) + ", " + str(mat_a[0, 2]) + ", " + str(mat_a[0, 3]) + ")")
     tasksFile.write(", \\quad a_2 = (" + str(mat_a[1, 0]) + ", " + str(mat_a[1, 1]) + ", " + str(mat_a[1, 2]) + ", " + str(mat_a[1, 3]) + ")")
@@ -292,17 +326,89 @@ def writeThirdTask(tasksFile, answersFile):
     tasksFile.write(", \\quad b_2 = (" + str(mat_b[1, 0]) + ", " + str(mat_b[1, 1]) + ", " + str(mat_b[1, 2]) + ", " + str(mat_b[1, 3]) + ")")
     tasksFile.write(", \\quad b_3 = (" + str(mat_b[2, 0]) + ", " + str(mat_b[2, 1]) + ", " + str(mat_b[2, 2]) + ", " + str(mat_b[2, 3]) + ")")
     tasksFile.write(", \\quad b_4 = (" + str(mat_b[3, 0]) + ", " + str(mat_b[3, 1]) + ", " + str(mat_b[3, 2]) + ", " + str(mat_b[3, 3]) + ")")
-    tasksFile.write(".\\] \n")
+    tasksFile.write(".\\]  \n")
+    tasksFile.write("\n \\medskip \n")
 
     answersFile.write("{\\noindent \\bf 3.} ")
     answersFile.write("dim $L_1$ = " + str(rank_l1) + ", dim $L_2$ = " + str(rank_l2) + ", dim U = " + str(rank_u) + ", dim W = " + str(rank_w) + ".\n")
 
 
-groupsSize = 60
+def generateFourthTask():
+    global randomSeed
+    low = -5
+    high = 6
+    size = 1
+
+    p1 = randomNumbers(low, high, size)
+    while (p1 == 0):
+        p1 = randomNumbers(low, high, size)
+    p2 = randomNumbers(low, high, size)
+    while abs(p1 * p2) < 2:
+        p2 = randomNumbers(low, high, size)
+    q1 = randomNumbers(low, high, size)
+    while abs(q1 * p1) < 2:
+        q1 = randomNumbers(low, high, size)
+    q2 = randomNumbers(low, high, size)
+    while abs(q1 * q2 * p2) < 2:
+        q2 = randomNumbers(low, high, size)
+    mat_cur = np.array([[1, 0, -p1, -q1], [0, 0, 0, 0], [0, 1, -p2, -q2], [0, 0, 0, 0]])
+    mat_rand = randomNumbers(-5, 6, (4, 4))
+    mat_u = np.dot(mat_rand, mat_cur)
+    mat_ans = np.array([[p1, p2, 1, 0], [q1, q2, 0, 1]])
+
+    countZeros = 0
+    countDoubles = 0
+    badVector = False
+    for i in range(4):
+        vector = mat_u[i, :]
+        if len({abs(elem) for elem in vector}) < 3:
+            badVector = True
+        for elem in np.array(vector):
+            if elem == 0:
+                countZeros += 1
+            if abs(elem) >= 10:
+                countDoubles += 1
+
+    if countZeros >= 2 or countDoubles >= 3 or badVector:
+        return generateFourthTask()
+
+    return mat_ans, mat_u
+
+
+def writeFourthTask(tasksFile, answersFile):
+    mat_ans, mat_u = generateFourthTask()
+    tasksFile.write("{\\noindent \\bf 4.} "
+                    "Пусть $U$ --- подпространство в $\R^4$, натянутое на векторы\n")
+    tasksFile.write("\\["
+                    "u_1 = (" + str(mat_u[0, 0]) + ", " + str(mat_u[0, 1]) + ", " + str(mat_u[0, 2]) + ", " + str(mat_u[0, 3]) + ")")
+    tasksFile.write(", \\quad u_2 = (" + str(mat_u[1, 0]) + ", " + str(mat_u[1, 1]) + ", " + str(mat_u[1, 2]) + ", " + str(mat_u[1, 3]) + ")")
+    tasksFile.write(", \\quad u_3 = (" + str(mat_u[2, 0]) + ", " + str(mat_u[2, 1]) + ", " + str(mat_u[2, 2]) + ", " + str(mat_u[2, 3]) + ")")
+    tasksFile.write(", \\quad u_4 = (" + str(mat_u[3, 0]) + ", " + str(mat_u[3, 1]) + ", " + str(mat_u[3, 2]) + ", " + str(mat_u[3, 3]) + ")")
+    tasksFile.write(". \\] \n ")
+    tasksFile.write("Составьте однородную систему линейных уравнений, у которой множество решений совпадает с $U$. \\\\ \\\\ \n")
+    tasksFile.write("\n \\medskip \n")
+
+    answersFile.write("{\\noindent \\bf 4.} ")
+    answersFile.write(" Общий метод решения выглядит так: \\\\ \n"
+                      "1. Составляется однородная система, строками матрицы которой являются координаты данных векторов. \\\\ \n"
+                      "2. Находится её фундаментальное решение. \\\\ \n"
+                      "3. Матрицей искомой однородной системы является матрица, строками которой являются векторы полученного фундаментального решения. \\\\ \n"
+                      "Итоговая система: \n"
+                      "$\\begin{cases}")
+    answersFile.write(str(mat_ans[0, 0][0]) + "x_1" + "+" + str(mat_ans[0, 1][0]) + "x_2" + "+" + "x_3 = 0" + "\\\\")
+    answersFile.write(str(mat_ans[1, 0][0]) + "x_1" + "+" + str(mat_ans[1, 1][0]) + "x_2" + "+" + "x_4 = 0")
+    answersFile.write("\\end{cases}$ \\\\ \n")
+    answersFile.write("Конечно, студенты могут предъявить какую-то другую СЛУ, порожденную данным базисом. \\\\ \n"
+                      "Однако, вот эта СЛУ --- самый очевидный и естественный ответ.\n")
+
+
+groupsSize = 45
 groupsNumber = 9
 
 for index in range(3, groupsNumber + 1):
-    # Создание файлов для записи условий и ответов, подстановка номера группы в имена файлов
+    if index == 4:
+        continue
+
     tasksFile = open("18" + str(index) + "_tasks.tex", 'w')
     answersFile = open("18" + str(index) + "_answers.tex", 'w')
 
@@ -316,9 +422,17 @@ for index in range(3, groupsNumber + 1):
         headers.tasksHeader(tasksFile, group, variant)
         headers.answersHeader(answersFile, group, variant)
 
-        # writeFirstTask(tasksFile, answersFile)
-        # writeSecondTask(tasksFile, answersFile)
+        print("Group №" + str(group) + ".", end=' ')
+        print("Variant №" + str(variant) + ":")
+        writeFirstTask(tasksFile, answersFile)
+        print("First task was generated.")
+        writeSecondTask(tasksFile, answersFile)
+        print("Second task was generated.")
+        writeFourthTask(tasksFile, answersFile)
+        print("Third task was generated.")
         writeThirdTask(tasksFile, answersFile)
+        print("Fourth task was generated.")
+        print()
 
         tasksFile.write("\n \\newpage\n")
         answersFile.write("\n \\newpage\n")
