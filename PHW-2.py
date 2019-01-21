@@ -9,7 +9,7 @@ import latex
 
 sys.setrecursionlimit(15000)
 
-randomSeed = 1488
+randomSeed = 1488228
 
 
 def randomNumbers(low, high, size):
@@ -95,16 +95,18 @@ def writeFirstTask(tasksFile, answersFile):
     latex.latexMatrix(tasksFile, matrix)
     tasksFile.write("\\]\n"
                     "в виде суммы $r$ матриц ранга 1, где $r = \\operatorname{rk} A$. \\\\ \\\\")
-
     tasksFile.write("\n \\medskip \n")
 
-    RREF = np.matrix(sp.Matrix(matrix).rref()[0])
-
     answersFile.write("{\\noindent \\bf 1.} "
-                      "Приведём матрицу к УСВ: \n"
-                      "\\[ A' = ")
-    latex.latexMatrix(answersFile, RREF)
-    answersFile.write(".\\]")
+                      "Матрица $A$ имеет ранг 3. Общий метод решения можно описать так:"
+                      "\\begin{enumerate}\n"
+                      "\\item Привести матрицу к УСВ. \n"
+                      "\\item Увидеть и выразить (записать в каждую строку/столбец) зависимость между строками/столбцами матрицы. \n"
+                      "\\item Разделить эту матрицу на сумму трёх так, чтобы у каждой был ранг 1, "
+                      "то есть каждая матрица представляла собой набор строк/столбцов, пропорциональных какой-то "
+                      "строке/какому-то столбцу исходной матрицы. \n"
+                      "\\end{enumerate} \n"
+                      "К сожалению, выразить ответ в общем виде не представляется возможным --- количество способов решения стремится к бесконечности.\n \\\\ \\\\ \n")
 
 
 def generateSecondTask():
@@ -222,6 +224,27 @@ def writeSecondTask(tasksFile, answersFile):
     tasksFile.write("\\] \n ровно один лежит в $U$, и дополните этот вектор до базиса подпространства $U$. ")
     tasksFile.write("\n \\\\ \\\\ \\medskip \n")
 
+    answersFile.write("{\\noindent \\bf 2.} ")
+    basis = np.matrix(u1)
+    basisNames = ["u_1"]
+    for vector in [(u2, "u_2"), (u3, "u_3"), (u4, "u_4")]:
+        if la.matrix_rank(np.c_[basis, vector[0]]) != la.matrix_rank(basis):
+            basis = np.c_[basis, vector[0]]
+            basisNames.append(vector[1])
+    answersFile.write("Базис подпространства $U$ состоит из векторов $")
+    delim = ""
+    for vector in basisNames:
+        answersFile.write(delim)
+        answersFile.write(vector)
+        delim = ", "
+    answersFile.write("$. \n")
+    vectorInU, vectorNotInU = [v1, "v_1"], [v2, "v_2"]
+    if la.matrix_rank(np.c_[basis, v1]) != la.matrix_rank(basis):
+        vectorInU, vectorNotInU = vectorNotInU, vectorInU
+    answersFile.write("Далее, вектор $" + vectorNotInU[1] + "$ не лежит в $U$, в то время как $" + vectorInU[1] + "$ принадлежит ему. \n")
+    answersFile.write("Осталось только дополнить его двумя векторами до базиса $U$ --- это можно сделать бесконечно большим количеством способов. \\\\ \\\\ \n")
+
+
 
 # This task was written by Ilya Anishchenko (https://github.com/TmKarter)
 def generateThirdTask():
@@ -280,17 +303,18 @@ def writeThirdTask(tasksFile, answersFile):
     tasksFile.write("\n \\medskip \n")
 
     answersFile.write("{\\noindent \\bf 3.} ")
-    answersFile.write(" Общий метод решения выглядит так: \\\\ \n"
-                      "1. Составляется однородная система, строками матрицы которой являются координаты данных векторов. \\\\ \n"
-                      "2. Находится её фундаментальное решение. \\\\ \n"
-                      "3. Матрицей искомой однородной системы является матрица, строками которой являются векторы полученного фундаментального решения. \\\\ \n"
-                      "Итоговая система: \n"
-                      "$\\begin{cases}")
-    answersFile.write(str(mat_ans[0, 0][0]) + "x_1" + "+" + str(mat_ans[0, 1][0]) + "x_2" + "+" + "x_3 = 0" + "\\\\")
-    answersFile.write(str(mat_ans[1, 0][0]) + "x_1" + "+" + str(mat_ans[1, 1][0]) + "x_2" + "+" + "x_4 = 0")
-    answersFile.write("\\end{cases}$ \\\\ \n")
+    answersFile.write(" Общий метод решения выглядит так: \n"
+                      "\\begin{enumerate}\n"
+                      "\\item Составляется однородная система, строками матрицы которой являются координаты данных векторов.  \n"
+                      "\\item Находится её фундаментальное решение. \n"
+                      "\\item Матрицей искомой однородной системы является матрица, строками которой являются векторы полученного фундаментального решения. \n"
+                      "\\end{enumerate}\n"
+                      "Итоговая система:  \n"
+                      "\\begin{center}\n")
+    latex.latexWriteSOLE(mat_ans, [0, 0], answersFile, "")
+    answersFile.write("\\end{center} \n")
     answersFile.write("Конечно, студенты могут предъявить какую-то другую СЛУ, порожденную данным базисом. \\\\ \n"
-                      "Однако, вот эта СЛУ --- самый очевидный и естественный ответ.\n")
+                      "Однако, вот эта СЛУ --- самый очевидный и естественный ответ. \n \\\\ \\\\ \n")
 
 
 # This task was written by Ilya Anishchenko (https://github.com/TmKarter)
@@ -346,6 +370,7 @@ def generateFourthTask():
                 countDoubles += 1
 
     if countZeros >= 3 or countDoubles >= 5 or badVector:
+        randomSeed += 1488
         return generateFourthTask()
 
     countZeros = 0
@@ -362,6 +387,7 @@ def generateFourthTask():
                 countDoubles += 1
 
     if countZeros >= 3 or countDoubles >= 5 or badVector:
+        randomSeed += 1488
         return generateFourthTask()
 
     return mat_a, mat_b, rank_l1, rank_l2, rank_u, rank_w
@@ -410,6 +436,10 @@ for index in range(3, groupsNumber + 1):
 
         headers.tasksHeader(tasksFile, group, variant)
         headers.answersHeader(answersFile, group, variant)
+
+        answersFile.write("Во всех задачах намеренно не приводится улучшенный ступенчатый вид --- "
+                          "те матрицы, которые дают библиотеки, и те матрицы, которые найдут студенты, сильно разнятся, "
+                          "ввиду чего смысл этого действа пропадает. \\\\ \\\\ \n")
 
         print("Group №" + str(group) + ".", end=' ')
         print("Variant №" + str(variant) + ":")
