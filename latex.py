@@ -1,5 +1,7 @@
-from fractions import Fraction
 import math
+
+import numpy as np
+from fractions import Fraction
 
 
 def latexCdot(file):
@@ -74,3 +76,34 @@ def latexFrac(ab):
         numerator = abs(numerator)
         denominator = abs(denominator)
     return sign + "\\nicefrac{" + str(numerator) + "}{" + str(denominator) + "}"
+
+
+def latexRowVector(file, vector, name):
+    file.write(name + " = (")
+    delim = ""
+    for elem in np.array(vector):
+        file.write(delim + str(elem[0]))
+        delim = ", "
+    file.write(")")
+
+def latexWriteSOLE(equations, b, file, sign):
+    file.write("$\\begin{cases}")
+    for row in range(equations.shape[0]):
+        elements = 0
+        for column in range(equations.shape[1]):
+            if equations[row, column] == 0:
+                continue
+            if column != 0:
+                file.write("+" if (equations[row, column] > 0 and elements != 0) else "")
+            if equations[row, column] != 1 and equations[row, column] != -1:
+                file.write(str(int(equations[row, column])))
+            elif int(equations[row, column]) == -1:
+                file.write("-")
+            file.write("x_{" + str(column + 1) + "}")
+            elements += 1
+        file.write(" &= " + str(int(b[row])))
+        if row < len(equations) - 1:
+            file.write(", \\\\")
+        else:
+            file.write(sign)
+    file.write("\\end{cases}$ \n")

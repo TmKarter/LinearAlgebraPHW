@@ -31,7 +31,7 @@ def tasksHeader(file, group, variant):
                "\\noindent\\makebox[\\textwidth]{Линейная алгебра и геометрия \\hfill ФКН НИУ ВШЭ, 2018/2019 учебный год, 1-й курс ОП ПМИ, основной поток}\n"
                "\\end{center}\n"
                "\\begin{center}\n"
-               "\\textbf{Индивидуальное домашнее задание 3.}\n"
+               "\\textbf{Индивидуальное домашнее задание 3}\n"
                "\\end{center}\n"
                "\\begin{center}\n"
                "{Группа БПМИ" + group + ". Вариант " + variant + "}\n\\end{center}\n\n")
