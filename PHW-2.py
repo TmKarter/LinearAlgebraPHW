@@ -245,16 +245,14 @@ def writeSecondTask(tasksFile, answersFile):
     answersFile.write("Осталось только дополнить его двумя векторами до базиса $U$ --- это можно сделать бесконечно большим количеством способов. \\\\ \\\\ \n")
 
 
-
 # This task was written by Ilya Anishchenko (https://github.com/TmKarter)
 def generateThirdTask():
-    global randomSeed
     low = -5
     high = 6
     size = 1
 
     p1 = randomNumbers(low, high, size)
-    while (p1 == 0):
+    while p1 == 0:
         p1 = randomNumbers(low, high, size)
     p2 = randomNumbers(low, high, size)
     while abs(p1 * p2) < 2:
@@ -265,10 +263,14 @@ def generateThirdTask():
     q2 = randomNumbers(low, high, size)
     while abs(q1 * q2 * p2) < 2:
         q2 = randomNumbers(low, high, size)
-    mat_cur = np.array([[1, 0, -p1, -q1], [0, 0, 0, 0], [0, 1, -p2, -q2], [0, 0, 0, 0]])
+    mat_cur = np.array([[1, 0, -p1, -q1],
+                        [0, 0, 0, 0],
+                        [0, 1, -p2, -q2],
+                        [0, 0, 0, 0]])
     mat_rand = randomNumbers(-5, 6, (4, 4))
     mat_u = np.dot(mat_rand, mat_cur)
-    mat_ans = np.array([[p1, p2, 1, 0], [q1, q2, 0, 1]])
+    mat_ans = np.array([[p1, p2, 1, 0],
+                        [q1, q2, 0, 1]])
 
     countZeros = 0
     countDoubles = 0
@@ -285,6 +287,31 @@ def generateThirdTask():
 
     if countZeros >= 2 or countDoubles >= 3 or badVector:
         return generateThirdTask()
+
+    flag_bad = False
+    num_1 = -1
+    num_2 = -1
+    for i in range(3):
+        for j in range(i + 1, 4):
+            cnt_digit = 0
+            for k in range(4):
+                if abs(mat_u[i, k]) == abs(mat_u[j, k]):
+                    cnt_digit += 1
+            if (cnt_digit == 4):
+                flag_bad = True
+                num_1 = i
+                num_2 = j
+                break
+    if (flag_bad):
+        if (num_2 + 1 < 4):
+            for k in range(4):
+                mat_u[num_2, k] = 2 * mat_u[num_1, k] - mat_u[num_2 + 1, k]
+        elif (num_2 - 1 == num_1):
+            for k in range(4):
+                mat_u[num_2, k] = 2 * mat_u[num_1, k] - mat_u[num_1 - 1, k]
+        else:
+            for k in range(4):
+                mat_u[num_2, k] = 2 * mat_u[num_1, k] - mat_u[num_2 - 1, k]
 
     return mat_ans, mat_u
 
