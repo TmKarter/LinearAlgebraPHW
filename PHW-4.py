@@ -46,6 +46,120 @@ def generateNewBasis(basis, coefficients):
             newBasis = np.c_[newBasis, vector]
     return newBasis
 
+def generateFirstTask():
+    global randomSeed
+
+    basis_mat = randomNumbers(-16, 16, (4, 4)) # если его не устроит базис, крути эти диапазоны
+    while (abs(la.det(basis_mat)) < 0.01):
+        basis_mat = randomNumbers(-16, 16, (4, 4))
+    coef_1 = int(randomNumbers(-2, 3, 1))
+    while (coef_1 == 0):
+        coef_1 = int(randomNumbers(-2, 3, 1))
+    coef_2 = int(randomNumbers(-1, 2, 1))
+    while (coef_2 == 0):
+        coef_2 = int(randomNumbers(-1, 2, 1))
+    coef_3 = int(randomNumbers(-2, 3, 1))
+    while (coef_3 == 0):
+        coef_3 = int(randomNumbers(-2, 3, 1))
+    coef_4 = int(randomNumbers(-1, 2, 1))
+    while (coef_4 == 0):
+        coef_4 = int(randomNumbers(-1, 2, 1))
+    x_vec = coef_1 * basis_mat[0:1,:] + coef_2 * basis_mat[1:2,:] + coef_3 * basis_mat[2:3,:] + coef_4 * basis_mat[3:,:]
+    pr_u = coef_1 * basis_mat[0:1,:] + coef_2 * basis_mat[1:2,:]
+    pr_w = coef_3 * basis_mat[2:3,:] + coef_4 * basis_mat[3:,:]
+    return basis_mat, x_vec, pr_u, pr_w, np.array([coef_1, coef_2, coef_3,coef_4])
+
+def writeFirstTask(tasksFile, answersFile):
+    basis_mat, x_vec, pr_u, pr_w, math_coef = generateFirstTask()
+    tasksFile.write("{\\noindent \\bf 1.} "
+                    "В прочтранстве $\\mathbb{R}^4$ рассмотрим подпространства $U = \\langle v_1,\\ v_2 \\rangle$ и $W = \\langle v_3,\\ v_4 \\rangle$, где\n")
+    tasksFile.write("\\["
+                    "v_1 = (" + str(basis_mat[0, 0]) + ", " + str(basis_mat[0, 1]) + ", " + str(basis_mat[0, 2]) + ", " + str(basis_mat[0, 3]) + ")")
+    tasksFile.write(
+        ", \\quad v_2 = (" + str(basis_mat[1, 0]) + ", " + str(basis_mat[1, 1]) + ", " + str(basis_mat[1, 2]) + ", " + str(basis_mat[1, 3]) + ")")
+    tasksFile.write(
+        ", \\quad v_3 = (" + str(basis_mat[2, 0]) + ", " + str(basis_mat[2, 1]) + ", " + str(basis_mat[2, 2]) + ", " + str(basis_mat[2, 3]) + ")")
+    tasksFile.write(
+        ", \\quad v_4 = (" + str(basis_mat[3, 0]) + ", " + str(basis_mat[3, 1]) + ", " + str(basis_mat[3, 2]) + ", " + str(basis_mat[3, 3]) + ")")
+    tasksFile.write(". \\] \n ")
+    tasksFile.write("\\begin{itemize}\\item[(а)] Докажите, что $\\mathbb{R}^4 = U \\oplus W$"
+                    "\\item[(б)] Найдите проекцию вектора ")
+    tasksFile.write(
+        "$x = (" + str(x_vec[0, 0]) + ", " + str(x_vec[0, 1]) + ", " + str(x_vec[0, 2]) + ", " + str(x_vec[0, 3]) + ")$")
+    tasksFile.write(" на подпространство $W$ вдоль подпространства $U$. \\end{itemize}\n")
+    answersFile.write("{\\noindent \\bf 3.} ")
+    answersFile.write(" Каждый пункт оценивается в 1 балл.\n")
+    answersFile.write("Студенты доказывают представление всего пространства прямой суммой $U$ и $W$ каким угодно способом. Проекции на подпространства:\n")
+    answersFile.write("\\["
+                    "pr_U = (" + str(pr_u[0, 0]) + ", " + str(pr_u[0, 1]) + ", " + str(pr_u[0, 2]) + ", " + str(pr_u[0, 3]) + ")")
+    answersFile.write(
+        ", \\quad pr_W = (" + str(pr_w[0, 0]) + ", " + str(pr_w[0, 1]) + ", " + str(
+            pr_w[0, 2]) + ", " + str(pr_w[0, 3]) + ")")
+    answersFile.write(". \\] \n ")
+    answersFile.write("Требуется найти именно второй вектор, то есть $pr_W$.\n \\\\ \\\\ \n")
+
+def generateSecondTask():
+    global randomSeed
+    basis_mat = randomNumbers(-15, 15, (5, 5))
+    while (abs(la.det(basis_mat)) < 0.01):
+        basis_mat = randomNumbers(-15,15, (5,5))
+    v_1 = basis_mat[0:1,:]
+    v_2 = basis_mat[1:2, :]
+    v_3 = basis_mat[2:3, :]
+    v_4 = -2 * v_1 + v_2 + v_3
+    x_ans1 = np.array([[0,0,0,0,0]])
+    x_ans2 = np.array([[0, 0, 0, 0, 0]])
+    for i in range(5):
+        x_ans1[0,i] = 1
+        for j in range(5):
+            x_ans2[0,j] = 1
+            checker = np.concatenate((v_1, v_2, v_3, x_ans1, x_ans2), axis=0)
+            if (abs(la.det(checker)) < 0.01):
+                x_ans2[0, j] = 0
+            else:
+                break
+        if (x_ans2.sum() == 1):
+            break
+        else:
+            x_ans1[0,i] = 0
+    return v_1, v_2, v_3, v_4, x_ans1, x_ans2
+
+def writeSecondTask(tasksFile, answersFile):
+    v_1, v_2, v_3, v_4, x_ans1, x_ans2 = generateSecondTask()
+    tasksFile.write("{\\noindent \\bf 2.} "
+                    "Пусть $U$ --- подпространство в $\\mathbb{R}^5$, порожденное векторами")
+    tasksFile.write("\\["
+                    "v_1 = (" + str(v_1[0, 0]) + ", " + str(v_1[0, 1]) + ", " + str(
+        v_1[0, 2]) + ", " + str(v_1[0, 3]) + ", " + str(v_1[0, 4]) +")")
+    tasksFile.write(
+        ", \\quad v_2 = (" + str(v_2[0, 0]) + ", " + str(v_2[0, 1]) + ", " + str(
+            v_2[0, 2]) + ", " + str(v_2[0, 3]) + ", " + str(v_2[0, 4]) + ")")
+    tasksFile.write(
+        ", \\quad v_3 = (" + str(v_3[0, 0]) + ", " + str(v_3[0, 1]) + ", " + str(
+            v_3[0, 2]) + ", " + str(v_3[0, 3]) + ", " + str(v_3[0, 4]) +")")
+    tasksFile.write(
+        ", \\quad v_4 = (" + str(v_4[0, 0]) + ", " + str(v_4[0, 1]) + ", " + str(
+            v_4[0, 2]) + ", " + str(v_4[0, 3]) + ", " + str(v_4[0, 4]) +")")
+    tasksFile.write(". \\] \n ")
+    tasksFile.write("Укажите базис какого-нибудь подпространства $W \\subset \\mathbb{R}^5$, для которого"
+                    "$\\mathbb{R}^5 = U \\oplus W$. Ответ обоснуйте.\n")
+    answersFile.write("{\\noindent \\bf 3.} ")
+    answersFile.write("Базисные векторы:\n"
+                      "\\[")
+    answersFile.write("v_1 = (" + str(v_1[0, 0]) + ", " + str(v_1[0, 1]) + ", " + str(
+        v_1[0, 2]) + ", " + str(v_1[0, 3]) + ", " + str(v_1[0, 4]) + ")"
+        ", \\quad v_2 = (" + str(v_2[0, 0]) + ", " + str(v_2[0, 1]) + ", " + str(
+            v_2[0, 2]) + ", " + str(v_2[0, 3]) + ", " + str(v_2[0, 4]) + ")")
+    answersFile.write(
+        ", \\quad v_3 = (" + str(v_3[0, 0]) + ", " + str(v_3[0, 1]) + ", " + str(
+            v_3[0, 2]) + ", " + str(v_3[0, 3]) + ", " + str(v_3[0, 4]) +")")
+    answersFile.write(". \\] \n ")
+    answersFile.write("Дополнить до базиса можно очень просто: достаточно взять векторы:"
+                      "$(" + str(x_ans1[0, 0]) + ", " + str(x_ans1[0, 1]) + ", " + str(
+        x_ans1[0, 2]) + ", " + str(x_ans1[0, 3]) + ", " + str(x_ans1[0, 4]) +")$ и")
+    answersFile.write("$(" + str(x_ans2[0, 0]) + ", " + str(x_ans2[0, 1]) + ", " + str(
+        x_ans2[0, 2]) + ", " + str(x_ans2[0, 3]) + ", " + str(x_ans2[0, 4]) +")$\n")
+    answersFile.write("Студент может предложить свой вариант, который так или иначе сведется к данному\n \\\\ \\\\ \n")
 
 def generateTask3():
     low = -3
