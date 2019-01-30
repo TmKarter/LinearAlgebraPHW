@@ -216,11 +216,8 @@ def generateTask4():
         coefficientsPoly = randomNumbers(low, high, size)
 
     poly = coefficientsPoly[0][0] * basisPoly[0, :] + coefficientsPoly[1][0] * basisPoly[1, :] + coefficientsPoly[2][0] * basisPoly[2, :]
-
     coefficientsR2 = mapMatrix.dot(coefficientsPoly)
-
     mappedPoly = basisR2[0, :] * coefficientsR2[0][0] + basisR2[1, :] * coefficientsR2[1][0]
-
     return basisPoly, basisR2, mapMatrix, poly, mappedPoly, coefficientsPoly, coefficientsR2
 
 
