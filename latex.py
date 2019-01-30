@@ -78,13 +78,54 @@ def latexFrac(ab):
     return sign + "\\nicefrac{" + str(numerator) + "}{" + str(denominator) + "}"
 
 
-def latexRowVector(file, vector, name):
-    file.write(name + " = (")
+def latexRowVector(file, vector, name="", needEqualSign=True):
+    file.write(name + needEqualSign * "=" + "\\left(")
     delim = ""
     for elem in np.array(vector):
-        file.write(delim + str(elem[0]))
+        if "<class 'numpy.ndarray'>" == str(type(elem)):
+            elem = elem[0]
+        file.write(delim + str(elem))
         delim = ", "
-    file.write(")")
+    file.write(" \\right)")
+
+def latexPolyVector(file, poly):
+    result = ""
+    first = True
+    for power, coefficient in enumerate(poly):
+        if power == 0:
+            if coefficient != 0:
+                result += str(coefficient)
+                first = False
+        elif power == 1:
+            if coefficient == 0:
+                continue
+            first = False
+            if coefficient < 0:
+                if coefficient == -1:
+                    coefficient = "-"
+                result += str(coefficient)
+            else:
+                if not first:
+                    result += "+"
+                if coefficient == 1:
+                    coefficient = ""
+                result += str(coefficient)
+            result += "x"
+        else:
+            if coefficient == 0:
+                continue
+            if coefficient < 0:
+                if coefficient == -1:
+                    coefficient = "-"
+                result += str(coefficient)
+            else:
+                if not first:
+                    result += "+"
+                if coefficient == 1:
+                    coefficient = ""
+                result += str(coefficient)
+            result += "x^2"
+    file.write(result)
 
 def latexWriteSOLE(equations, b, file, sign):
     file.write("$\\begin{cases}")
